@@ -172,20 +172,17 @@
       img.src = t.avatar;
       img.loading = "lazy";
 
-      var fallback = document.createElement("span");
-      fallback.className = "tx-row__avatar-fallback";
-      fallback.textContent = initials(t.name);
-      fallback.hidden = true;
-
-      (function (imgEl, fbEl) {
+      (function (imgEl, cell, displayName) {
         imgEl.addEventListener("error", function () {
           imgEl.remove();
-          fbEl.hidden = false;
+          var fb = document.createElement("span");
+          fb.className = "tx-row__avatar-fallback";
+          fb.textContent = initials(displayName);
+          cell.appendChild(fb);
         });
-      })(img, fallback);
+      })(img, avatarCell, t.name);
 
       avatarCell.appendChild(img);
-      avatarCell.appendChild(fallback);
 
       var name = document.createElement("p");
       name.className = "tx-row__name";
@@ -203,10 +200,14 @@
       dateEl.className = "tx-row__date";
       dateEl.textContent = dateFmt.format(parseISO(t.date));
 
+      var meta = document.createElement("div");
+      meta.className = "tx-row__meta";
+      meta.appendChild(amountEl);
+      meta.appendChild(dateEl);
+
       row.appendChild(avatarCell);
       row.appendChild(name);
-      row.appendChild(amountEl);
-      row.appendChild(dateEl);
+      row.appendChild(meta);
 
       container.appendChild(row);
     }

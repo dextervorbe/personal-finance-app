@@ -147,7 +147,7 @@
   align-items: stretch;
 }
 
-@media (max-width: 36rem) {
+@media (max-width: 54rem) {
   .pots-layout {
     grid-template-columns: 1fr;
   }
@@ -329,28 +329,59 @@
 
 .tx-row__date {
   margin: 0;
-  grid-column: 4;
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--color-text-muted);
   white-space: nowrap;
 }
 
-@media (max-width: 30rem) {
+/* Wide: amount + date participate directly in the 4-column row */
+.tx-row__meta {
+  display: contents;
+}
+
+.overview-card--transactions {
+  container-type: inline-size;
+  container-name: tx-card;
+}
+
+/* Compact rows when the *card* is narrow (e.g. two-column overview), not only tiny viewports */
+@container tx-card (max-width: 36rem) {
   .tx-row {
-    grid-template-columns: auto 1fr;
+    grid-template-columns: 2.5rem 1fr;
     grid-template-rows: auto auto;
+    align-items: start;
+    column-gap: 1rem;
+    row-gap: 0.375rem;
+  }
+
+  .tx-row__avatar-cell {
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+
+  .tx-row__name {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .tx-row__meta {
+    display: flex;
+    grid-column: 2;
+    grid-row: 2;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    min-width: 0;
   }
 
   .tx-row__amount {
-    grid-column: 2;
-    justify-self: end;
+    justify-self: unset;
   }
 
   .tx-row__date {
-    grid-column: 2;
-    grid-row: 2;
-    justify-self: end;
+    justify-self: unset;
   }
 }
 
@@ -514,7 +545,10 @@
   .summary-cards {
     grid-template-columns: 1fr;
   }
+}
 
+/* Stack overview columns earlier — otherwise each ~½ shell width is too narrow beside the sidebar */
+@media (max-width: 68rem) {
   .overview-grid {
     grid-template-columns: 1fr;
   }
