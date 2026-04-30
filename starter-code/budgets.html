@@ -5,79 +5,143 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon-32x32.png">
-  
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/sidebar.css">
+
   <title>Frontend Mentor | Personal finance app - Budgets</title>
 </head>
 <body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  Overview
-  Transactions
-  Budgets
-  Pots
-  Recurring Bills
+  <aside class="sidebar" id="app-sidebar" aria-label="Application">
+    <div class="sidebar__inner">
+      <a class="sidebar__logo" href="index.html" aria-label="finance — home">
+        <img class="sidebar__logo-img sidebar__logo-large" src="./assets/images/logo-large.svg" alt="" width="122" height="22">
+        <img class="sidebar__logo-img sidebar__logo-small" src="./assets/images/logo-small.svg" alt="" width="14" height="22">
+      </a>
 
-  Minimize Menu
+      <nav class="sidebar__nav" aria-label="Primary">
+        <ul class="sidebar__list">
+          <li>
+            <a href="index.html" class="sidebar__link">
+              <span class="sidebar__icon">
+                <img class="sidebar__icon-img" src="./assets/images/icon-nav-overview.svg" alt="" width="18" height="19">
+              </span>
+              <span class="sidebar__label">Overview</span>
+            </a>
+          </li>
+          <li>
+            <a href="transactions.html" class="sidebar__link">
+              <span class="sidebar__icon">
+                <img class="sidebar__icon-img" src="./assets/images/icon-nav-transactions.svg" alt="" width="18" height="18">
+              </span>
+              <span class="sidebar__label">Transactions</span>
+            </a>
+          </li>
+          <li>
+            <a href="budgets.html" class="sidebar__link" aria-current="page">
+              <span class="sidebar__icon">
+                <img class="sidebar__icon-img" src="./assets/images/icon-nav-budgets.svg" alt="" width="18" height="18">
+              </span>
+              <span class="sidebar__label">Budgets</span>
+            </a>
+          </li>
+          <li>
+            <a href="pots.html" class="sidebar__link">
+              <span class="sidebar__icon">
+                <img class="sidebar__icon-img" src="./assets/images/icon-nav-pots.svg" alt="" width="18" height="18">
+              </span>
+              <span class="sidebar__label">Pots</span>
+            </a>
+          </li>
+          <li>
+            <a href="recurring.html" class="sidebar__link">
+              <span class="sidebar__icon">
+                <img class="sidebar__icon-img" src="./assets/images/icon-nav-recurring-bills.svg" alt="" width="18" height="18">
+              </span>
+              <span class="sidebar__label">Recurring Bills</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
 
-  Budgets
+      <button type="button" class="sidebar__collapse" data-sidebar-toggle aria-expanded="true" aria-controls="app-sidebar">
+        <span class="sidebar__collapse-icon" aria-hidden="true">
+          <img src="./assets/images/icon-minimize-menu.svg" alt="" width="20" height="20">
+        </span>
+        <span class="sidebar__collapse-label">Minimize Menu</span>
+      </button>
+    </div>
+  </aside>
 
-  Add New Budget
+  <div class="app-shell">
+    <main id="main-content">
+      Budgets
 
-  <!-- Add budget data -->
+      Add New Budget
+
+      <!-- Add budget data -->
 
 
-  <!-- Add/Edit budget start -->
+      <!-- Add/Edit budget start -->
 
-  Add New Budget
-  Choose a category to set a spending budget. These categories can help you monitor spending.
+      Add New Budget
+      Choose a category to set a spending budget. These categories can help you monitor spending.
 
-  Edit Budget
-  As your budgets change, feel free to update your spending limits.
-  
-  Budget Category
-  Entertainment
-  Bills
-  Groceries
-  Dining Out
-  Transportation
-  Personal Care
-  Education
-  Lifestyle
-  Shopping
-  General
+      Edit Budget
+      As your budgets change, feel free to update your spending limits.
 
-  Maximum Spend
+      Budget Category
+      Entertainment
+      Bills
+      Groceries
+      Dining Out
+      Transportation
+      Personal Care
+      Education
+      Lifestyle
+      Shopping
+      General
 
-  Theme
-  Green
-  Yellow
-  Cyan
-  Navy
-  Red 
-  Purple
-  Turquoise
-  Brown
-  Magenta
-  Blue
-  Navy Grey
-  Army Green
-  Pink
-  Gold
-  Orange
+      Maximum Spend
 
-  Add Budget / Save Changes
-  
-  <!-- Add/Edit budget end -->
+      Theme
+      Green
+      Yellow
+      Cyan
+      Navy
+      Red
+      Purple
+      Turquoise
+      Brown
+      Magenta
+      Blue
+      Navy Grey
+      Army Green
+      Pink
+      Gold
+      Orange
 
-  <!-- Delete budget start -->
+      Add Budget / Save Changes
 
-  Delete '<!-- budget name -->'
+      <!-- Add/Edit budget end -->
 
-  Are you sure you want to delete this budget? This action cannot be reversed, and all the data inside it will be removed forever.
+      <!-- Delete budget start -->
 
-  Yes, Confirm Deletion
-  No, Go Back
+      Delete '<!-- budget name -->'
 
-  <!-- Delete budget end -->
+      Are you sure you want to delete this budget? This action cannot be reversed, and all the data inside it will be removed forever.
 
+      Yes, Confirm Deletion
+      No, Go Back
+
+      <!-- Delete budget end -->
+    </main>
+  </div>
+
+  <script src="./js/sidebar.js" defer></script>
 </body>
 </html>
