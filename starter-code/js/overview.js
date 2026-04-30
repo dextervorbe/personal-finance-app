@@ -125,11 +125,19 @@
     return sum;
   }
 
+  function cssVar(name, fallback) {
+    var v = getComputedStyle(document.documentElement)
+      .getPropertyValue(name)
+      .trim();
+    return v || fallback;
+  }
+
   function buildConicGradient(spents, themes) {
     var total = 0;
     for (var i = 0; i < spents.length; i++) total += spents[i];
     if (total <= 0) {
-      return "conic-gradient(from -90deg, #e0dedc 0deg 360deg)";
+      var empty = cssVar("--color-donut-empty", "#e0dedc");
+      return "conic-gradient(from -90deg, " + empty + " 0deg 360deg)";
     }
     var angle = 0;
     var parts = [];

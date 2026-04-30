@@ -23,7 +23,7 @@
   margin: 0 0 2rem;
   font-size: clamp(1.75rem, 4vw, 2rem);
   font-weight: 700;
-  color: var(--color-primary-dark);
+  color: var(--color-heading);
   letter-spacing: -0.02em;
 }
 
@@ -48,8 +48,8 @@
 
 .summary-card--income,
 .summary-card--expenses {
-  background-color: #fff;
-  color: var(--color-primary-dark);
+  background-color: var(--color-card);
+  color: var(--color-heading);
 }
 
 .summary-card__label {
@@ -73,7 +73,7 @@
 /* Shared card chrome */
 .overview-card {
   padding: 1.5rem;
-  background-color: #fff;
+  background-color: var(--color-card);
   border-radius: 0.75rem;
 }
 
@@ -89,7 +89,7 @@
   margin: 0;
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--color-primary-dark);
+  color: var(--color-heading);
 }
 
 .overview-card__link {
@@ -107,7 +107,11 @@
 }
 
 .overview-card__link:hover {
-  color: var(--color-primary-dark);
+  color: var(--color-link-hover-text);
+}
+
+[data-theme="dark"] .overview-card__link-icon {
+  filter: brightness(0) saturate(0) invert(0.72);
 }
 
 .overview-card__link:focus-visible {
@@ -155,7 +159,7 @@
   justify-content: center;
   gap: 0.75rem;
   padding: 1rem 1.25rem;
-  background-color: var(--color-body-bg);
+  background-color: var(--color-subtle-fill);
   border-radius: 0.75rem;
 }
 
@@ -178,7 +182,7 @@
   margin: 0;
   font-size: clamp(1.75rem, 3vw, 2rem);
   font-weight: 700;
-  color: var(--color-primary-dark);
+  color: var(--color-heading);
 }
 
 .pots-mini-grid {
@@ -221,7 +225,7 @@
 .pots-mini__amount {
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--color-primary-dark);
+  color: var(--color-heading);
 }
 
 /* Transactions list */
@@ -240,8 +244,8 @@
   margin: 0 0 1rem;
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
-  background-color: #ffe8e8;
-  color: var(--color-primary-dark);
+  background-color: var(--color-error-bg);
+  color: var(--color-heading);
   font-size: 0.875rem;
 }
 
@@ -251,7 +255,7 @@
   gap: 1rem;
   align-items: center;
   padding: 1rem 0;
-  border-bottom: 1px solid rgb(32 31 36 / 0.12);
+  border-bottom: 1px solid var(--color-divider);
   color: inherit;
   border-radius: 0.375rem;
   margin-inline: -0.375rem;
@@ -282,17 +286,17 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  background-color: rgb(32 31 36 / 0.08);
+  background-color: var(--color-tx-avatar-fallback-bg);
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--color-primary-dark);
+  color: var(--color-heading);
 }
 
 .tx-row__name {
   margin: 0;
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--color-primary-dark);
+  color: var(--color-heading);
   min-width: 0;
 }
 
@@ -308,7 +312,7 @@
 }
 
 .tx-row__amount--debit {
-  color: var(--color-primary-dark);
+  color: var(--color-heading);
 }
 
 .tx-row__date {
@@ -391,7 +395,7 @@
   margin: 0;
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--color-primary-dark);
+  color: var(--color-heading);
 }
 
 .budgets-donut-center__limit {
@@ -432,7 +436,7 @@
 .budgets-legend__value {
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--color-primary-dark);
+  color: var(--color-heading);
   white-space: nowrap;
 }
 
@@ -448,7 +452,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  background-color: var(--color-body-bg);
+  background-color: var(--color-subtle-fill);
   border-radius: 0.5rem;
   border-left: 0.25rem solid transparent;
 }
@@ -472,7 +476,7 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
-  color: var(--color-primary-dark);
+  color: var(--color-heading);
 }
 
 .recurring-bar--paid {
