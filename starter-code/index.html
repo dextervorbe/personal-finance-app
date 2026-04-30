@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/sidebar.css">
+  <link rel="stylesheet" href="./css/overview.css">
 
   <title>Frontend Mentor | Personal finance app - Overview</title>
 </head>
@@ -78,38 +79,118 @@
   </aside>
 
   <div class="app-shell">
-    <main id="main-content">
-      Overview
+    <main id="main-content" class="overview" aria-busy="true">
+      <h1 class="overview__title">Overview</h1>
 
-      Current Balance
-      <!-- Add balance -->
+      <section class="overview-summary" aria-labelledby="overview-summary-heading">
+        <h2 id="overview-summary-heading" class="visually-hidden">Balance summary</h2>
+        <div class="summary-cards">
+          <article class="summary-card summary-card--balance">
+            <h3 class="summary-card__label">Current Balance</h3>
+            <p class="summary-card__value" id="overview-balance">—</p>
+          </article>
+          <article class="summary-card summary-card--income">
+            <h3 class="summary-card__label">Income</h3>
+            <p class="summary-card__value" id="overview-income">—</p>
+          </article>
+          <article class="summary-card summary-card--expenses">
+            <h3 class="summary-card__label">Expenses</h3>
+            <p class="summary-card__value" id="overview-expenses">—</p>
+          </article>
+        </div>
+      </section>
 
-      Income
-      <!-- Add income -->
+      <div class="overview-grid">
+        <div class="overview-grid__col">
+          <section class="overview-card" aria-labelledby="overview-pots-heading">
+            <header class="overview-card__header">
+              <h2 id="overview-pots-heading" class="overview-card__title">Pots</h2>
+              <a href="pots.html" class="overview-card__link">
+                See Details<span class="visually-hidden"> (pots)</span>
+                <img class="overview-card__link-icon" src="./assets/images/icon-caret-right.svg" alt="">
+              </a>
+            </header>
+            <div class="pots-layout">
+              <div class="pots-total">
+                <p class="pots-total__label">
+                  <img class="pots-total__icon" src="./assets/images/icon-pot.svg" alt="" width="24" height="24">
+                  Total Saved
+                </p>
+                <p class="pots-total__value" id="pots-total-saved">—</p>
+              </div>
+              <div id="pots-mini-grid" class="pots-mini-grid" aria-live="polite"></div>
+            </div>
+          </section>
 
-      Expenses
-      <!-- Add expenses -->
+          <section class="overview-card" aria-labelledby="overview-transactions-heading">
+            <header class="overview-card__header">
+              <h2 id="overview-transactions-heading" class="overview-card__title">Transactions</h2>
+              <a href="transactions.html" class="overview-card__link">
+                View All<span class="visually-hidden"> transactions</span>
+                <img class="overview-card__link-icon" src="./assets/images/icon-caret-right.svg" alt="">
+              </a>
+            </header>
+            <div id="overview-transactions" class="tx-list"></div>
+          </section>
+        </div>
 
-      Pots
-      See Details
+        <div class="overview-grid__col">
+          <section class="overview-card" aria-labelledby="overview-budgets-heading">
+            <header class="overview-card__header">
+              <h2 id="overview-budgets-heading" class="overview-card__title">Budgets</h2>
+              <a href="budgets.html" class="overview-card__link">
+                See Details<span class="visually-hidden"> (budgets)</span>
+                <img class="overview-card__link-icon" src="./assets/images/icon-caret-right.svg" alt="">
+              </a>
+            </header>
+            <p id="budgets-chart-summary" class="visually-hidden">Loading budget chart summary.</p>
+            <div class="budgets-body">
+              <div class="budgets-donut-wrap" role="img" aria-labelledby="budgets-chart-summary">
+                <div id="budgets-donut" class="budgets-donut"></div>
+                <div class="budgets-donut-center" aria-hidden="true">
+                  <p id="budgets-center-spent" class="budgets-donut-center__spent">—</p>
+                  <p id="budgets-center-limit" class="budgets-donut-center__limit">—</p>
+                </div>
+              </div>
+              <div id="budgets-legend" class="budgets-legend"></div>
+            </div>
+          </section>
 
-      Total Saved
-      <!-- Add pots data -->
-
-      Budgets
-      See Details
-      <!-- Add budgets data -->
-
-      Transactions
-      View All
-      <!-- Add transactions data -->
-
-      Recurring Bills
-      See Details
-      <!-- Add recurring bills data -->
+          <section class="overview-card" aria-labelledby="overview-recurring-heading">
+            <header class="overview-card__header">
+              <h2 id="overview-recurring-heading" class="overview-card__title">Recurring Bills</h2>
+              <a href="recurring.html" class="overview-card__link">
+                See Details<span class="visually-hidden"> (recurring bills)</span>
+                <img class="overview-card__link-icon" src="./assets/images/icon-caret-right.svg" alt="">
+              </a>
+            </header>
+            <div class="recurring-bars">
+              <div class="recurring-bar recurring-bar--paid">
+                <div class="recurring-bar__body">
+                  <p class="recurring-bar__label">Paid Bills</p>
+                  <p class="recurring-bar__value" id="recurring-paid">—</p>
+                </div>
+              </div>
+              <div class="recurring-bar recurring-bar--upcoming">
+                <div class="recurring-bar__body">
+                  <p class="recurring-bar__label">Total Upcoming</p>
+                  <p class="recurring-bar__value" id="recurring-upcoming">—</p>
+                </div>
+              </div>
+              <div class="recurring-bar recurring-bar--due">
+                <div class="recurring-bar__body">
+                  <p class="recurring-bar__label">Due Soon</p>
+                  <p class="recurring-bar__value" id="recurring-due">—</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
     </main>
   </div>
 
   <script src="./js/sidebar.js" defer></script>
+  <script src="./js/overview.js" defer></script>
 </body>
 </html>
