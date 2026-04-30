@@ -236,8 +236,15 @@
 }
 
 .tx-row__avatar-cell {
-  display: flex;
-  align-items: center;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+}
+
+.tx-row__avatar-cell > * {
+  grid-area: 1 / 1;
 }
 
 .overview-error {
@@ -290,6 +297,11 @@
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--color-heading);
+}
+
+/* Class `display` beats the `hidden` attribute otherwise — keep fallback truly hidden until shown */
+.tx-row__avatar-fallback[hidden] {
+  display: none !important;
 }
 
 .tx-row__name {
@@ -345,7 +357,7 @@
 /* Budgets donut */
 .budgets-body {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
   gap: 1.5rem;
   align-items: center;
 }
@@ -363,8 +375,13 @@
 
 .budgets-donut-wrap {
   position: relative;
+  justify-self: start;
   width: min(100%, 11rem);
+  max-width: 11rem;
   aspect-ratio: 1;
+  /* Keep center labels from painting over the legend in the next grid column */
+  overflow: hidden;
+  border-radius: 50%;
 }
 
 .budgets-donut {
@@ -387,6 +404,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 0 12%;
+  box-sizing: border-box;
   text-align: center;
   pointer-events: none;
 }
