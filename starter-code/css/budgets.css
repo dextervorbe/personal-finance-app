@@ -72,7 +72,7 @@
 }
 
 .budget-card {
-  padding: 1.25rem clamp(1rem, 3vw, 1.5rem);
+  padding: 2rem;
   background-color: var(--color-card);
   border-radius: 0.75rem;
 }
