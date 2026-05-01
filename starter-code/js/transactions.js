@@ -1,5 +1,6 @@
 (function () {
   var PAGE_SIZE = 10;
+  var NAME_MAX = 30;
 
   var CATEGORY_VALUES = [
     "",
@@ -36,6 +37,92 @@
     var a = parts[0] ? parts[0][0] : "";
     var b = parts[1] ? parts[1][0] : "";
     return (a + b).toUpperCase() || "?";
+  }
+
+  var MONTH_NAMES = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  function ordinalSuffix(day) {
+    var d = Number(day);
+    if (d >= 11 && d <= 13) return String(d) + "th";
+    switch (d % 10) {
+      case 1:
+        return String(d) + "st";
+      case 2:
+        return String(d) + "nd";
+      case 3:
+        return String(d) + "rd";
+      default:
+        return String(d) + "th";
+    }
+  }
+
+  function formatOrdinalDateDisplay(dateStr) {
+    var parts = dateStr.split("-");
+    if (parts.length !== 3) return "";
+    var y = Number(parts[0]);
+    var m = Number(parts[1]) - 1;
+    var d = Number(parts[2]);
+    if (
+      !Number.isFinite(y) ||
+      !Number.isFinite(m) ||
+      !Number.isFinite(d) ||
+      m < 0 ||
+      m > 11
+    ) {
+      return "";
+    }
+    return MONTH_NAMES[m] + " " + ordinalSuffix(d) + ", " + y;
+  }
+
+  function dateInputToISO(dateStr) {
+    var parts = dateStr.split("-");
+    if (parts.length !== 3) return new Date().toISOString();
+    return new Date(
+      Date.UTC(
+        Number(parts[0]),
+        Number(parts[1]) - 1,
+        Number(parts[2]),
+        12,
+        0,
+        0,
+      ),
+    ).toISOString();
+  }
+
+  function pad2(n) {
+    return (n < 10 ? "0" : "") + n;
+  }
+
+  function todayDateInputValue() {
+    var now = new Date();
+    return (
+      now.getFullYear() +
+      "-" +
+      pad2(now.getMonth() + 1) +
+      "-" +
+      pad2(now.getDate())
+    );
+  }
+
+  function toYMD(y, monthIndex0, day) {
+    return y + "-" + pad2(monthIndex0 + 1) + "-" + pad2(day);
+  }
+
+  function formatCalendarAriaLabel(y, monthIndex0, day) {
+    return MONTH_NAMES[monthIndex0] + " " + day + ", " + y;
   }
 
   function normalizeQueryCategory(raw) {
@@ -172,6 +259,32 @@
     var pagesEl = document.getElementById("tx-pages");
     var pagNav = document.getElementById("tx-pagination");
 
+    var addOpenBtn = document.getElementById("tx-add-open");
+    var addDialog = document.getElementById("tx-add-dialog");
+    var addForm = document.getElementById("tx-add-form");
+    var modalCloseBtn = document.getElementById("tx-modal-close");
+    var addName = document.getElementById("tx-add-name");
+    var addNameCount = document.getElementById("tx-add-name-count");
+    var addNameErr = document.getElementById("tx-add-name-err");
+    var addDate = document.getElementById("tx-add-date");
+    var addDateDisplay = document.getElementById("tx-add-date-display");
+    var addDateErr = document.getElementById("tx-add-date-err");
+    var addAmount = document.getElementById("tx-add-amount");
+    var addAmountErr = document.getElementById("tx-add-amount-err");
+    var addRecurring = document.getElementById("tx-add-recurring");
+
+    var dateWrap = document.querySelector(".tx-modal-field-date-wrap");
+    var txDateTrigger = document.getElementById("tx-date-trigger");
+    var txDateCalendar = document.getElementById("tx-date-calendar");
+    var txCalTitle = document.getElementById("tx-cal-title");
+    var txCalGrid = document.getElementById("tx-cal-grid");
+    var txCalPrev = document.getElementById("tx-cal-prev");
+    var txCalNext = document.getElementById("tx-cal-next");
+
+    var calendarOpen = false;
+    var viewYear = new Date().getFullYear();
+    var viewMonth = new Date().getMonth();
+
     var allTransactions = [];
     var currentPage = 1;
 
@@ -265,6 +378,272 @@
       currentPage++;
       applyFilters();
     });
+
+    function hideErr(el) {
+      el.hidden = true;
+      el.textContent = "";
+    }
+
+    function showErr(el, msg) {
+      el.hidden = false;
+      el.textContent = msg;
+    }
+
+    function clearAddFormErrors() {
+      hideErr(addNameErr);
+      hideErr(addDateErr);
+      hideErr(addAmountErr);
+      addName.removeAttribute("aria-invalid");
+      addAmount.removeAttribute("aria-invalid");
+      addDate.removeAttribute("aria-invalid");
+    }
+
+    function updateNameCounter() {
+      var left = NAME_MAX - addName.value.length;
+      addNameCount.textContent =
+        left + " of " + NAME_MAX + " characters left";
+    }
+
+    function updateDateOrdinalDisplay() {
+      addDateDisplay.textContent = formatOrdinalDateDisplay(addDate.value);
+    }
+
+    function syncViewFromHiddenDate() {
+      var v = addDate.value;
+      if (!v) {
+        var nowEmpty = new Date();
+        viewYear = nowEmpty.getFullYear();
+        viewMonth = nowEmpty.getMonth();
+        return;
+      }
+      var p = v.split("-");
+      if (p.length !== 3) return;
+      var y = Number(p[0]);
+      var m = Number(p[1]) - 1;
+      if (!Number.isFinite(y) || !Number.isFinite(m) || m < 0 || m > 11)
+        return;
+      viewYear = y;
+      viewMonth = m;
+    }
+
+    function renderCalendar() {
+      if (!txCalTitle || !txCalGrid) return;
+      txCalTitle.textContent = MONTH_NAMES[viewMonth] + " " + viewYear;
+      txCalGrid.innerHTML = "";
+
+      var sel = addDate.value;
+      var dim = new Date(viewYear, viewMonth + 1, 0).getDate();
+      var prevDim = new Date(viewYear, viewMonth, 0).getDate();
+      var startPad = new Date(viewYear, viewMonth, 1).getDay();
+      var nCells = Math.ceil((startPad + dim) / 7) * 7;
+
+      for (var i = 0; i < nCells; i++) {
+        var dayNum = i - startPad + 1;
+        var mIdx = viewMonth;
+        var y = viewYear;
+        var displayDay;
+        var isOutside = false;
+
+        if (dayNum < 1) {
+          isOutside = true;
+          mIdx = viewMonth === 0 ? 11 : viewMonth - 1;
+          y = viewMonth === 0 ? viewYear - 1 : viewYear;
+          displayDay = prevDim + dayNum;
+        } else if (dayNum > dim) {
+          isOutside = true;
+          mIdx = viewMonth === 11 ? 0 : viewMonth + 1;
+          y = viewMonth === 11 ? viewYear + 1 : viewYear;
+          displayDay = dayNum - dim;
+        } else {
+          displayDay = dayNum;
+        }
+
+        var cellYmd = toYMD(y, mIdx, displayDay);
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tx-cal__day";
+        if (isOutside) btn.classList.add("tx-cal__day--outside");
+        if (cellYmd === sel) {
+          btn.classList.add("tx-cal__day--selected");
+          btn.setAttribute("aria-current", "date");
+        }
+        btn.textContent = String(displayDay);
+        btn.setAttribute(
+          "aria-label",
+          formatCalendarAriaLabel(y, mIdx, displayDay),
+        );
+
+        (function (ymd, vy, vm) {
+          btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            addDate.value = ymd;
+            updateDateOrdinalDisplay();
+            viewYear = vy;
+            viewMonth = vm;
+            closeCalendar();
+          });
+        })(cellYmd, y, mIdx);
+
+        txCalGrid.appendChild(btn);
+      }
+    }
+
+    function docCloseCal(e) {
+      if (!calendarOpen || !dateWrap) return;
+      if (!dateWrap.contains(e.target)) closeCalendar();
+    }
+
+    function closeCalendar() {
+      if (!calendarOpen) return;
+      calendarOpen = false;
+      if (txDateCalendar) txDateCalendar.hidden = true;
+      if (txDateTrigger)
+        txDateTrigger.setAttribute("aria-expanded", "false");
+      document.removeEventListener("mousedown", docCloseCal);
+    }
+
+    function openCalendar() {
+      syncViewFromHiddenDate();
+      renderCalendar();
+      if (txDateCalendar) txDateCalendar.hidden = false;
+      if (txDateTrigger) txDateTrigger.setAttribute("aria-expanded", "true");
+      calendarOpen = true;
+      setTimeout(function () {
+        document.addEventListener("mousedown", docCloseCal);
+      }, 0);
+    }
+
+    function openAddModal() {
+      if (!addDialog || typeof addDialog.showModal !== "function") return;
+      closeCalendar();
+      addForm.reset();
+      addDate.value = todayDateInputValue();
+      syncViewFromHiddenDate();
+      updateDateOrdinalDisplay();
+      updateNameCounter();
+      clearAddFormErrors();
+      addDialog.showModal();
+      requestAnimationFrame(function () {
+        addName.focus();
+      });
+    }
+
+    function closeAddModal() {
+      if (addDialog && typeof addDialog.close === "function") {
+        addDialog.close();
+      }
+    }
+
+    if (addOpenBtn && addDialog) {
+      addOpenBtn.addEventListener("click", openAddModal);
+    }
+
+    if (modalCloseBtn && addDialog) {
+      modalCloseBtn.addEventListener("click", closeAddModal);
+    }
+
+    if (addDialog) {
+      addDialog.addEventListener("click", function (e) {
+        if (e.target === addDialog) closeAddModal();
+      });
+      addDialog.addEventListener("cancel", function (e) {
+        if (calendarOpen) {
+          e.preventDefault();
+          closeCalendar();
+        }
+      });
+      addDialog.addEventListener("close", function () {
+        closeCalendar();
+      });
+    }
+
+    if (txDateTrigger && txDateCalendar) {
+      txDateTrigger.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (calendarOpen) closeCalendar();
+        else openCalendar();
+      });
+    }
+
+    if (txCalPrev) {
+      txCalPrev.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (viewMonth === 0) {
+          viewMonth = 11;
+          viewYear--;
+        } else {
+          viewMonth--;
+        }
+        renderCalendar();
+      });
+    }
+
+    if (txCalNext) {
+      txCalNext.addEventListener("click", function (e) {
+        e.stopPropagation();
+        if (viewMonth === 11) {
+          viewMonth = 0;
+          viewYear++;
+        } else {
+          viewMonth++;
+        }
+        renderCalendar();
+      });
+    }
+
+    if (addName && addNameCount) {
+      addName.addEventListener("input", updateNameCounter);
+    }
+
+    if (addForm && addDialog) {
+      addForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        clearAddFormErrors();
+
+        var nameVal = addName.value.trim();
+        var ok = true;
+
+        if (!nameVal) {
+          showErr(addNameErr, "Enter a name.");
+          addName.setAttribute("aria-invalid", "true");
+          ok = false;
+        } else if (nameVal.length > NAME_MAX) {
+          showErr(addNameErr, "Name must be " + NAME_MAX + " characters or fewer.");
+          addName.setAttribute("aria-invalid", "true");
+          ok = false;
+        }
+
+        if (!addDate.value) {
+          showErr(addDateErr, "Choose a transaction date.");
+          addDate.setAttribute("aria-invalid", "true");
+          ok = false;
+        }
+
+        var amtRaw = addAmount.value.trim();
+        var amtNum = amtRaw === "" ? NaN : Number(amtRaw);
+        if (amtRaw === "" || !Number.isFinite(amtNum)) {
+          showErr(addAmountErr, "Enter a valid amount.");
+          addAmount.setAttribute("aria-invalid", "true");
+          ok = false;
+        }
+
+        if (!ok) return;
+
+        var cat = document.getElementById("tx-add-category").value;
+        allTransactions.unshift({
+          avatar: "./assets/images/avatars/__new__.jpg",
+          name: nameVal,
+          category: cat,
+          date: dateInputToISO(addDate.value),
+          amount: amtNum,
+          recurring: addRecurring.checked,
+        });
+
+        currentPage = 1;
+        applyFilters();
+        closeAddModal();
+      });
+    }
 
     fetch("./data.json")
       .then(function (res) {
