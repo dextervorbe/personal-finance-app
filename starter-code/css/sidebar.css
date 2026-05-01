@@ -2,6 +2,7 @@
 
 :root {
   --color-primary-dark: #201f24;
+  --color-sidebar-bg: #201f24;
   --color-accent-green: #277c78;
   --color-sidebar-muted: #b3b3b3;
   --color-text-muted: #696868;
@@ -22,17 +23,22 @@
 }
 
 [data-theme="dark"] {
-  --color-body-bg: #141316;
+  /* Primary canvas ~charcoal/near-black (matches design reference #0B0B0B) */
+  --color-body-bg: #0b0b0b;
+  --color-primary-dark: #0b0b0b;
+  /* Nav sits above the canvas — original FM charcoal reads clearly on near-black */
+  --color-sidebar-bg: #201f24;
   --color-text-muted: #a09fa6;
   --color-heading: #f7f7f8;
-  --color-card: #25242b;
-  --color-subtle-fill: #2e2d35;
-  --color-divider: rgb(255 255 255 / 0.12);
-  --color-tx-avatar-fallback-bg: rgb(255 255 255 / 0.08);
+  /* Surfaces slightly lifted so cards read against the canvas */
+  --color-card: #131313;
+  --color-subtle-fill: #181818;
+  --color-divider: rgb(255 255 255 / 0.1);
+  --color-tx-avatar-fallback-bg: rgb(255 255 255 / 0.07);
   --color-link-hover-text: #ffffff;
-  --color-error-bg: #3d2426;
-  --color-donut-empty: #45444d;
-  --color-donut-track: rgb(0 0 0 / 0.35);
+  --color-error-bg: #3a2225;
+  --color-donut-empty: #2a2a2a;
+  --color-donut-track: rgb(255 255 255 / 0.06);
 }
 
 *,
@@ -82,9 +88,16 @@ body {
   inset: 0 auto 0 0;
   z-index: 100;
   width: var(--sidebar-width-current);
-  background-color: var(--color-primary-dark);
-  transition: width 0.22s ease;
+  background-color: var(--color-sidebar-bg);
+  transition:
+    width 0.22s ease,
+    box-shadow 0.22s ease;
   overflow-x: clip;
+}
+
+[data-theme="dark"] .sidebar {
+  border-right: 1px solid rgb(255 255 255 / 0.08);
+  box-shadow: 6px 0 36px rgb(0 0 0 / 0.55);
 }
 
 .sidebar__inner {
@@ -450,5 +463,11 @@ body {
 
   .app-shell {
     margin-inline-start: 0;
+  }
+
+  [data-theme="dark"] .sidebar {
+    border-right: none;
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 0.55);
   }
 }

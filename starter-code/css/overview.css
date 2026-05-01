@@ -400,10 +400,6 @@
     justify-items: center;
   }
 
-  .budgets-donut-wrap {
-    justify-self: center;
-  }
-
   .budgets-legend {
     width: 100%;
   }
@@ -411,7 +407,7 @@
 
 .budgets-donut-wrap {
   position: relative;
-  justify-self: start;
+  justify-self: center;
   box-sizing: border-box;
   width: 100%;
   max-width: 11rem;
