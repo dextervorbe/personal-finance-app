@@ -388,7 +388,8 @@
 /* Budgets donut */
 .budgets-body {
   display: grid;
-  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  /* Donut column needs a definite min track — minmax(0, auto) can collapse to 0 when width is % of the column */
+  grid-template-columns: minmax(9rem, 11rem) minmax(0, 1fr);
   gap: 1.5rem;
   align-items: center;
 }
@@ -399,6 +400,10 @@
     justify-items: center;
   }
 
+  .budgets-donut-wrap {
+    justify-self: center;
+  }
+
   .budgets-legend {
     width: 100%;
   }
@@ -407,7 +412,8 @@
 .budgets-donut-wrap {
   position: relative;
   justify-self: start;
-  width: min(100%, 11rem);
+  box-sizing: border-box;
+  width: 100%;
   max-width: 11rem;
   aspect-ratio: 1;
   /* Keep center labels from painting over the legend in the next grid column */

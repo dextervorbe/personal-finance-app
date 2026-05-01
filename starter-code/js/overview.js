@@ -134,19 +134,30 @@
 
   function buildConicGradient(spents, themes) {
     var total = 0;
-    for (var i = 0; i < spents.length; i++) total += spents[i];
+    var n = spents.length;
+    for (var i = 0; i < n; i++) total += spents[i];
     if (total <= 0) {
       var empty = cssVar("--color-donut-empty", "#e0dedc");
       return "conic-gradient(from -90deg, " + empty + " 0deg 360deg)";
     }
+    /* Thin wedges between slices (design-style gaps in the ring) */
+    var gapDeg = n > 1 ? 2.25 : 0;
+    var totalGaps = gapDeg * n;
+    var avail = Math.max(360 - totalGaps, 1);
+    var track = cssVar("--color-donut-track", "transparent");
+
     var angle = 0;
     var parts = [];
-    for (var j = 0; j < spents.length; j++) {
-      var frac = spents[j] / total;
-      var deg = frac * 360;
+    for (var j = 0; j < n; j++) {
+      var seg = (spents[j] / total) * avail;
       var start = angle;
-      angle += deg;
+      angle += seg;
       parts.push(themes[j] + " " + start + "deg " + angle + "deg");
+      if (gapDeg > 0) {
+        var g0 = angle;
+        angle += gapDeg;
+        parts.push(track + " " + g0 + "deg " + angle + "deg");
+      }
     }
     return "conic-gradient(from -90deg, " + parts.join(", ") + ")";
   }
