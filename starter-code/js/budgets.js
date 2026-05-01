@@ -276,6 +276,37 @@
       editThemeSwatch.style.backgroundColor = hex;
     }
 
+    function isCategoryUsedByOtherBudget(category, editIndex) {
+      for (var k = 0; k < budgetsState.length; k++) {
+        if (k === editIndex) continue;
+        if (budgetsState[k].category === category) return true;
+      }
+      return false;
+    }
+
+    function fillEditCategorySelect(editIndex) {
+      if (!editCategory || editIndex < 0 || editIndex >= budgetsState.length)
+        return;
+      var current = budgetsState[editIndex].category;
+      editCategory.innerHTML = "";
+      for (var j = 0; j < CATEGORY_OPTIONS.length; j++) {
+        var cat = CATEGORY_OPTIONS[j];
+        if (isCategoryUsedByOtherBudget(cat, editIndex) && cat !== current) {
+          continue;
+        }
+        var opt = document.createElement("option");
+        opt.value = cat;
+        opt.textContent = cat;
+        editCategory.appendChild(opt);
+      }
+      for (var s = 0; s < editCategory.options.length; s++) {
+        if (editCategory.options[s].value === current) {
+          editCategory.selectedIndex = s;
+          break;
+        }
+      }
+    }
+
     function openEditModal(index) {
       var b = budgetsState[index];
       if (!b || !editDialog || typeof editDialog.showModal !== "function") return;
@@ -283,14 +314,7 @@
       hideErr(editMaxErr);
       if (editMax) editMax.removeAttribute("aria-invalid");
 
-      if (editCategory) {
-        editCategory.innerHTML = "";
-        var co = document.createElement("option");
-        co.value = b.category;
-        co.textContent = b.category;
-        editCategory.appendChild(co);
-        editCategory.selectedIndex = 0;
-      }
+      fillEditCategorySelect(index);
 
       populateThemeDropdown(editTheme);
       var ti = findThemePresetIndex(b.theme);
@@ -723,6 +747,9 @@
         }
         row.maximum = maxNum;
         row.theme = editTheme ? editTheme.value : row.theme;
+        if (editCategory) {
+          row.category = editCategory.value;
+        }
         closeEditModal();
         renderAll();
       });

@@ -150,6 +150,62 @@
     });
   }
 
+  function monthKeyUTC(iso) {
+    var d = parseISO(iso);
+    return d.getUTCFullYear() + "-" + pad2(d.getUTCMonth() + 1);
+  }
+
+  function formatMonthDividerHeading(iso) {
+    var d = parseISO(iso);
+    return MONTH_NAMES[d.getUTCMonth()] + " " + d.getUTCFullYear();
+  }
+
+  /** Sum of outflows (negative amounts) per calendar month (UTC) for filtered rows */
+  function computeMonthExpenseTotals(rows) {
+    var totals = {};
+    for (var i = 0; i < rows.length; i++) {
+      var t = rows[i];
+      var key = monthKeyUTC(t.date);
+      if (!totals[key]) totals[key] = 0;
+      if (t.amount < 0) totals[key] += Math.abs(t.amount);
+    }
+    return totals;
+  }
+
+  function renderMonthDivider(tbody, isoDate, monthTotalsMap) {
+    var key = monthKeyUTC(isoDate);
+    var total = monthTotalsMap[key] !== undefined ? monthTotalsMap[key] : 0;
+    var tr = document.createElement("tr");
+    tr.className = "tx-month-divider-row";
+    var td = document.createElement("td");
+    td.colSpan = 4;
+    td.className = "tx-month-divider-cell";
+
+    var wrap = document.createElement("div");
+    wrap.className = "tx-month-divider";
+    wrap.setAttribute(
+      "aria-label",
+      formatMonthDividerHeading(isoDate) +
+        ", " +
+        currency.format(total) +
+        " total spend",
+    );
+
+    var monthEl = document.createElement("span");
+    monthEl.className = "tx-month-divider__month";
+    monthEl.textContent = formatMonthDividerHeading(isoDate);
+
+    var totalEl = document.createElement("span");
+    totalEl.className = "tx-month-divider__total";
+    totalEl.textContent = currency.format(total) + " total spend";
+
+    wrap.appendChild(monthEl);
+    wrap.appendChild(totalEl);
+    td.appendChild(wrap);
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
+
   function sortRows(rows, mode) {
     var copy = rows.slice();
     switch (mode) {
@@ -314,8 +370,20 @@
         emptyEl.setAttribute("aria-hidden", "true");
         var start = (currentPage - 1) * PAGE_SIZE;
         var slice = rows.slice(start, start + PAGE_SIZE);
+        var monthTotalsMap = computeMonthExpenseTotals(rows);
+        var useMonthDividers =
+          sortMode === "latest" || sortMode === "oldest";
+        var prevMonthKey = null;
         for (var i = 0; i < slice.length; i++) {
-          renderRow(tbody, slice[i]);
+          var tx = slice[i];
+          if (useMonthDividers) {
+            var mk = monthKeyUTC(tx.date);
+            if (mk !== prevMonthKey) {
+              renderMonthDivider(tbody, tx.date, monthTotalsMap);
+              prevMonthKey = mk;
+            }
+          }
+          renderRow(tbody, tx);
         }
       }
 

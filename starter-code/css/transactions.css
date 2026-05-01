@@ -213,6 +213,35 @@
   border-bottom: none;
 }
 
+.tx-month-divider-row td {
+  padding: 0.5rem 0 0.75rem;
+  border-bottom: none;
+  vertical-align: middle;
+}
+
+.tx-month-divider {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.625rem 1rem;
+  border-radius: 0.375rem;
+  background-color: var(--color-subtle-fill);
+}
+
+.tx-month-divider__month {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.tx-month-divider__total {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
 .tx-cell-name {
   display: flex;
   align-items: center;
