@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/sidebar.css">
+  <link rel="stylesheet" href="./css/transactions.css">
 
   <title>Frontend Mentor | Personal finance app - Transactions</title>
 </head>
@@ -90,43 +91,85 @@
   </aside>
 
   <div class="app-shell">
-    <main id="main-content">
-      Search transactions
+    <main id="main-content" class="transactions-page" aria-busy="true">
+      <header class="transactions-page__header">
+        <h1 class="transactions-page__title">Transactions</h1>
+        <button type="button" class="transactions-add-btn">+ Add New Transaction</button>
+      </header>
 
-      Sort by
-      Latest
-      Oldest
-      A to Z
-      Z to A
-      Highest
-      Lowest
+      <section class="transactions-panel" aria-labelledby="transactions-heading">
+        <h2 id="transactions-heading" class="visually-hidden">Transaction list</h2>
 
-      Category
-      All Transactions
-      Entertainment
-      Bills
-      Groceries
-      Dining Out
-      Transportation
-      Personal Care
-      Education
-      Lifestyle
-      Shopping
-      General
+        <div class="transactions-toolbar">
+          <div class="transactions-search">
+            <label class="visually-hidden" for="tx-search">Search transactions</label>
+            <input type="search" id="tx-search" class="transactions-search__input" placeholder="Search transaction" autocomplete="off" spellcheck="false">
+            <img class="transactions-search__icon" src="./assets/images/icon-search.svg" alt="" width="14" height="14">
+          </div>
 
-      Recipient/Sender
-      Category
-      Transaction Date
-      Amount
+          <div class="transactions-filters">
+            <label for="tx-sort">
+              Sort by
+              <select id="tx-sort" class="transactions-select">
+                <option value="latest" selected>Latest</option>
+                <option value="oldest">Oldest</option>
+                <option value="az">A to Z</option>
+                <option value="za">Z to A</option>
+                <option value="highest">Highest</option>
+                <option value="lowest">Lowest</option>
+              </select>
+            </label>
+            <label for="tx-category">
+              Category
+              <select id="tx-category" class="transactions-select">
+                <option value="">All Transactions</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Bills">Bills</option>
+                <option value="Groceries">Groceries</option>
+                <option value="Dining Out">Dining Out</option>
+                <option value="Transportation">Transportation</option>
+                <option value="Personal Care">Personal Care</option>
+                <option value="Education">Education</option>
+                <option value="Lifestyle">Lifestyle</option>
+                <option value="Shopping">Shopping</option>
+                <option value="General">General</option>
+              </select>
+            </label>
+          </div>
+        </div>
 
-      <!-- Add transaction data -->
+        <div class="transactions-table-wrap">
+          <table class="transactions-table">
+            <thead>
+              <tr>
+                <th scope="col">Recipient / Sender</th>
+                <th scope="col">Category</th>
+                <th scope="col">Transaction Date</th>
+                <th scope="col">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="transactions-tbody"></tbody>
+          </table>
+          <p id="transactions-empty" class="transactions-empty" hidden>No transactions match your filters.</p>
+        </div>
 
-      Prev
-      Next
+        <nav class="transactions-pagination" id="tx-pagination" aria-label="Transaction pages">
+          <button type="button" class="pagination-nav-btn" id="tx-prev" aria-label="Previous page">
+            <img src="./assets/images/icon-caret-left.svg" alt="" width="6" height="11">
+            Prev
+          </button>
+          <div class="transactions-pagination__pages" id="tx-pages" role="group" aria-label="Page"></div>
+          <button type="button" class="pagination-nav-btn" id="tx-next" aria-label="Next page">
+            Next
+            <img src="./assets/images/icon-caret-right.svg" alt="" width="6" height="11">
+          </button>
+        </nav>
+      </section>
     </main>
   </div>
 
   <script src="./js/theme.js" defer></script>
   <script src="./js/sidebar.js" defer></script>
+  <script src="./js/transactions.js" defer></script>
 </body>
 </html>
