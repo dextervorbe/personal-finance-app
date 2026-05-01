@@ -11,6 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/sidebar.css">
+  <link rel="stylesheet" href="./css/overview.css">
+  <link rel="stylesheet" href="./css/transactions.css">
+  <link rel="stylesheet" href="./css/budgets.css">
 
   <title>Frontend Mentor | Personal finance app - Budgets</title>
 </head>
@@ -90,71 +93,172 @@
   </aside>
 
   <div class="app-shell">
-    <main id="main-content">
-      Budgets
+    <main id="main-content" class="budgets-page" aria-busy="true">
+      <header class="budgets-page__header">
+        <h1 class="budgets-page__title">Budgets</h1>
+        <button type="button" class="transactions-add-btn" id="budget-add-open">+ Add New Budget</button>
+      </header>
 
-      Add New Budget
-
-      <!-- Add budget data -->
-
-
-      <!-- Add/Edit budget start -->
-
-      Add New Budget
-      Choose a category to set a spending budget. These categories can help you monitor spending.
-
-      Edit Budget
-      As your budgets change, feel free to update your spending limits.
-
-      Budget Category
-      Entertainment
-      Bills
-      Groceries
-      Dining Out
-      Transportation
-      Personal Care
-      Education
-      Lifestyle
-      Shopping
-      General
-
-      Maximum Spend
-
-      Theme
-      Green
-      Yellow
-      Cyan
-      Navy
-      Red
-      Purple
-      Turquoise
-      Brown
-      Magenta
-      Blue
-      Navy Grey
-      Army Green
-      Pink
-      Gold
-      Orange
-
-      Add Budget / Save Changes
-
-      <!-- Add/Edit budget end -->
-
-      <!-- Delete budget start -->
-
-      Delete '<!-- budget name -->'
-
-      Are you sure you want to delete this budget? This action cannot be reversed, and all the data inside it will be removed forever.
-
-      Yes, Confirm Deletion
-      No, Go Back
-
-      <!-- Delete budget end -->
+      <div class="budgets-layout">
+        <div class="budgets-layout__summary">
+          <section class="budgets-summary" aria-labelledby="budgets-summary-heading">
+            <h2 id="budgets-summary-heading" class="visually-hidden">Spending summary</h2>
+            <div class="budgets-body">
+              <div class="budgets-donut-wrap">
+                <div id="budgets-page-donut" class="budgets-donut" role="img" aria-hidden="true"></div>
+                <div class="budgets-donut-center">
+                  <p id="budgets-page-center-spent" class="budgets-donut-center__spent"></p>
+                  <p id="budgets-page-center-limit" class="budgets-donut-center__limit"></p>
+                </div>
+              </div>
+              <div class="budgets-summary-legend-block">
+                <p class="budgets-summary__heading">Spending Summary</p>
+                <div id="budgets-page-legend" class="budgets-legend"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <div class="budgets-layout__cards budgets-cards" id="budgets-cards-root"></div>
+      </div>
     </main>
   </div>
 
+  <dialog class="tx-modal" id="budget-add-dialog" aria-labelledby="budget-modal-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="budget-modal-title" class="tx-modal__title">Add New Budget</h2>
+          <p class="tx-modal__desc">
+            Choose a category to set a spending budget. These categories can help you monitor spending.
+          </p>
+        </div>
+        <button type="button" class="tx-modal__close" id="budget-modal-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+
+      <form class="tx-modal__form" id="budget-add-form" novalidate>
+        <p id="budget-modal-category-banner" class="modal-banner" hidden>
+          All categories already have a budget. Remove or edit an existing budget to add another.
+        </p>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="budget-add-category">Budget Category</label>
+          <select id="budget-add-category" class="transactions-select tx-modal__select-full" aria-describedby="budget-add-category-err"></select>
+          <span id="budget-add-category-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="budget-add-max">Maximum Spend</label>
+          <div class="budget-max-input">
+            <span class="budget-max-input__prefix" aria-hidden="true">$</span>
+            <input
+              type="number"
+              id="budget-add-max"
+              class="budget-max-input__control"
+              inputmode="decimal"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              aria-describedby="budget-add-max-err"
+            >
+          </div>
+          <span id="budget-add-max-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="budget-add-theme">Theme</label>
+          <div class="budget-theme-row">
+            <span id="budget-theme-swatch" class="budget-theme-swatch" aria-hidden="true"></span>
+            <select id="budget-add-theme" class="transactions-select tx-modal__select-full"></select>
+          </div>
+        </div>
+
+        <button type="submit" class="tx-modal__submit">Add Budget</button>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="tx-modal" id="budget-edit-dialog" aria-labelledby="budget-edit-heading">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="budget-edit-heading" class="tx-modal__title">Edit Budget</h2>
+          <p class="tx-modal__desc">
+            As your budgets change, feel free to update your spending limits.
+          </p>
+        </div>
+        <button type="button" class="tx-modal__close" id="budget-edit-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+
+      <form class="tx-modal__form" id="budget-edit-form" novalidate>
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="budget-edit-category">Budget Category</label>
+          <select
+            id="budget-edit-category"
+            class="transactions-select tx-modal__select-full"
+            disabled
+            aria-disabled="true"
+          ></select>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="budget-edit-max">Maximum Spend</label>
+          <div class="budget-max-input">
+            <span class="budget-max-input__prefix" aria-hidden="true">$</span>
+            <input
+              type="number"
+              id="budget-edit-max"
+              class="budget-max-input__control"
+              inputmode="decimal"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              aria-describedby="budget-edit-max-err"
+            >
+          </div>
+          <span id="budget-edit-max-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="budget-edit-theme">Theme</label>
+          <div class="budget-theme-row">
+            <span id="budget-edit-theme-swatch" class="budget-theme-swatch" aria-hidden="true"></span>
+            <select id="budget-edit-theme" class="transactions-select tx-modal__select-full"></select>
+          </div>
+        </div>
+
+        <button type="submit" class="tx-modal__submit">Save Changes</button>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="tx-modal" id="budget-delete-dialog" aria-labelledby="budget-delete-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="budget-delete-title" class="tx-modal__title">Delete budget</h2>
+          <p id="budget-delete-lede" class="tx-modal__desc"></p>
+        </div>
+        <button type="button" class="tx-modal__close" id="budget-delete-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+      <div class="budget-delete-actions">
+        <button type="button" class="budget-delete-btn budget-delete-btn--danger" id="budget-delete-yes">
+          Yes, Confirm Deletion
+        </button>
+        <button type="button" class="budget-delete-btn budget-delete-btn--ghost" id="budget-delete-no">
+          No, Go Back
+        </button>
+      </div>
+    </div>
+  </dialog>
+
   <script src="./js/theme.js" defer></script>
   <script src="./js/sidebar.js" defer></script>
+  <script src="./js/budgets.js" defer></script>
 </body>
 </html>

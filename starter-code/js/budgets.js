@@ -1,0 +1,810 @@
+(function () {
+  var CATEGORY_OPTIONS = [
+    "Entertainment",
+    "Bills",
+    "Groceries",
+    "Dining Out",
+    "Transportation",
+    "Personal Care",
+    "Education",
+    "Lifestyle",
+    "Shopping",
+    "General",
+  ];
+
+  var THEME_PRESETS = [
+    { label: "Green", hex: "#277C78" },
+    { label: "Yellow", hex: "#F2CDAC" },
+    { label: "Cyan", hex: "#82C9D7" },
+    { label: "Navy", hex: "#25294D" },
+    { label: "Red", hex: "#C94736" },
+    { label: "Purple", hex: "#826CB0" },
+    { label: "Turquoise", hex: "#67C7C9" },
+    { label: "Brown", hex: "#93674E" },
+    { label: "Magenta", hex: "#D946B8" },
+    { label: "Blue", hex: "#3F82B2" },
+    { label: "Navy Grey", hex: "#626070" },
+    { label: "Army Green", hex: "#6B7F59" },
+    { label: "Pink", hex: "#F472B6" },
+    { label: "Gold", hex: "#EAB308" },
+    { label: "Orange", hex: "#EA580C" },
+  ];
+
+  var currency = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  });
+
+  var dateFmt = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  function parseISO(iso) {
+    return new Date(iso);
+  }
+
+  function isAugust2024(d) {
+    return d.getUTCFullYear() === 2024 && d.getUTCMonth() === 7;
+  }
+
+  function initials(name) {
+    var parts = name.trim().split(/\s+/);
+    var a = parts[0] ? parts[0][0] : "";
+    var b = parts[1] ? parts[1][0] : "";
+    return (a + b).toUpperCase() || "?";
+  }
+
+  function spentInAugust(transactions, category) {
+    var sum = 0;
+    for (var i = 0; i < transactions.length; i++) {
+      var t = transactions[i];
+      if (!isAugust2024(parseISO(t.date))) continue;
+      if (t.category !== category) continue;
+      if (t.amount >= 0) continue;
+      sum += Math.abs(t.amount);
+    }
+    return sum;
+  }
+
+  function latestForCategory(transactions, category, n) {
+    var filtered = transactions.filter(function (t) {
+      return t.category === category;
+    });
+    filtered.sort(function (a, b) {
+      return parseISO(b.date) - parseISO(a.date);
+    });
+    return filtered.slice(0, n);
+  }
+
+  function cssVar(name, fallback) {
+    var v = getComputedStyle(document.documentElement)
+      .getPropertyValue(name)
+      .trim();
+    return v || fallback;
+  }
+
+  function buildConicGradient(spents, themes) {
+    var total = 0;
+    var n = spents.length;
+    for (var i = 0; i < n; i++) total += spents[i];
+    if (total <= 0) {
+      var empty = cssVar("--color-donut-empty", "#e0dedc");
+      return "conic-gradient(from -90deg, " + empty + " 0deg 360deg)";
+    }
+    var gapDeg = n > 1 ? 2.25 : 0;
+    var totalGaps = gapDeg * n;
+    var avail = Math.max(360 - totalGaps, 1);
+    var track = cssVar("--color-donut-track", "transparent");
+
+    var angle = 0;
+    var parts = [];
+    for (var j = 0; j < n; j++) {
+      var seg = (spents[j] / total) * avail;
+      var start = angle;
+      angle += seg;
+      parts.push(themes[j] + " " + start + "deg " + angle + "deg");
+      if (gapDeg > 0) {
+        var g0 = angle;
+        angle += gapDeg;
+        parts.push(track + " " + g0 + "deg " + angle + "deg");
+      }
+    }
+    return "conic-gradient(from -90deg, " + parts.join(", ") + ")";
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var main = document.querySelector(".budgets-page");
+    if (!main) return;
+
+    var donutEl = document.getElementById("budgets-page-donut");
+    var centerSpent = document.getElementById("budgets-page-center-spent");
+    var centerLimit = document.getElementById("budgets-page-center-limit");
+    var legendEl = document.getElementById("budgets-page-legend");
+    var cardsRoot = document.getElementById("budgets-cards-root");
+
+    var addBtn = document.getElementById("budget-add-open");
+    var addDialog = document.getElementById("budget-add-dialog");
+    var addForm = document.getElementById("budget-add-form");
+    var modalClose = document.getElementById("budget-modal-close");
+    var catSelect = document.getElementById("budget-add-category");
+    var maxInput = document.getElementById("budget-add-max");
+    var themeSelect = document.getElementById("budget-add-theme");
+    var themeSwatch = document.getElementById("budget-theme-swatch");
+    var catBanner = document.getElementById("budget-modal-category-banner");
+    var catErr = document.getElementById("budget-add-category-err");
+    var maxErr = document.getElementById("budget-add-max-err");
+
+    var deleteDialog = document.getElementById("budget-delete-dialog");
+    var deleteClose = document.getElementById("budget-delete-close");
+    var deleteYes = document.getElementById("budget-delete-yes");
+    var deleteNo = document.getElementById("budget-delete-no");
+    var deleteTitle = document.getElementById("budget-delete-title");
+    var deleteLede = document.getElementById("budget-delete-lede");
+
+    var editDialog = document.getElementById("budget-edit-dialog");
+    var editForm = document.getElementById("budget-edit-form");
+    var editClose = document.getElementById("budget-edit-close");
+    var editCategory = document.getElementById("budget-edit-category");
+    var editMax = document.getElementById("budget-edit-max");
+    var editTheme = document.getElementById("budget-edit-theme");
+    var editThemeSwatch = document.getElementById("budget-edit-theme-swatch");
+    var editMaxErr = document.getElementById("budget-edit-max-err");
+
+    var transactions = [];
+    var budgetsState = [];
+    var pendingDeleteIndex = null;
+    var pendingEditIndex = null;
+
+    function closeAllBudgetMenus() {
+      var wraps = document.querySelectorAll(".budget-card__menu-wrap");
+      for (var w = 0; w < wraps.length; w++) {
+        wraps[w].classList.remove("is-open");
+        var dd = wraps[w].querySelector(".budget-card__dropdown");
+        if (dd) dd.hidden = true;
+        var mBtn = wraps[w].querySelector(".budget-card__menu");
+        if (mBtn) mBtn.setAttribute("aria-expanded", "false");
+      }
+    }
+
+    function closeDeleteDialog() {
+      pendingDeleteIndex = null;
+      if (deleteDialog && typeof deleteDialog.close === "function") {
+        deleteDialog.close();
+      }
+    }
+
+    function openDeleteConfirm(index) {
+      var b = budgetsState[index];
+      if (!b || !deleteDialog) return;
+      pendingDeleteIndex = index;
+      if (deleteTitle) deleteTitle.textContent = "Delete '" + b.category + "'";
+      if (deleteLede) {
+        deleteLede.textContent =
+          "Are you sure you want to delete this budget? This action cannot be reversed, and all the data inside it will be removed forever.";
+      }
+      deleteDialog.showModal();
+    }
+
+    function confirmDeleteBudget() {
+      if (pendingDeleteIndex === null) return;
+      var idx = pendingDeleteIndex;
+      closeDeleteDialog();
+      if (idx >= 0 && idx < budgetsState.length) {
+        budgetsState.splice(idx, 1);
+        renderAll();
+      }
+    }
+
+    document.addEventListener("click", function (e) {
+      if (e.target.closest(".budget-card__menu-wrap")) return;
+      closeAllBudgetMenus();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape") return;
+      closeAllBudgetMenus();
+    });
+
+    function hideErr(el) {
+      if (!el) return;
+      el.hidden = true;
+      el.textContent = "";
+    }
+
+    function showErr(el, msg) {
+      if (!el) return;
+      el.hidden = false;
+      el.textContent = msg;
+    }
+
+    function syncThemeSwatch() {
+      if (!themeSelect || !themeSwatch) return;
+      var opt = themeSelect.options[themeSelect.selectedIndex];
+      var hex = opt ? opt.value : "#C94736";
+      themeSwatch.style.backgroundColor = hex;
+    }
+
+    function fillThemeSelect() {
+      if (!themeSelect) return;
+      themeSelect.innerHTML = "";
+      for (var i = 0; i < THEME_PRESETS.length; i++) {
+        var p = THEME_PRESETS[i];
+        var opt = document.createElement("option");
+        opt.value = p.hex;
+        opt.textContent = p.label;
+        themeSelect.appendChild(opt);
+      }
+      var redIdx = 0;
+      for (var ri = 0; ri < THEME_PRESETS.length; ri++) {
+        if (THEME_PRESETS[ri].label === "Red") {
+          redIdx = ri;
+          break;
+        }
+      }
+      themeSelect.selectedIndex = redIdx;
+      syncThemeSwatch();
+    }
+
+    function findThemePresetIndex(hex) {
+      if (!hex) return -1;
+      var h = String(hex).toLowerCase().trim();
+      for (var i = 0; i < THEME_PRESETS.length; i++) {
+        if (THEME_PRESETS[i].hex.toLowerCase() === h) return i;
+      }
+      return -1;
+    }
+
+    function populateThemeDropdown(selectEl) {
+      if (!selectEl) return;
+      selectEl.innerHTML = "";
+      for (var i = 0; i < THEME_PRESETS.length; i++) {
+        var p = THEME_PRESETS[i];
+        var opt = document.createElement("option");
+        opt.value = p.hex;
+        opt.textContent = p.label;
+        selectEl.appendChild(opt);
+      }
+    }
+
+    function syncEditThemeSwatch() {
+      if (!editTheme || !editThemeSwatch) return;
+      var opt = editTheme.options[editTheme.selectedIndex];
+      var hex = opt ? opt.value : "#277C78";
+      editThemeSwatch.style.backgroundColor = hex;
+    }
+
+    function openEditModal(index) {
+      var b = budgetsState[index];
+      if (!b || !editDialog || typeof editDialog.showModal !== "function") return;
+      pendingEditIndex = index;
+      hideErr(editMaxErr);
+      if (editMax) editMax.removeAttribute("aria-invalid");
+
+      if (editCategory) {
+        editCategory.innerHTML = "";
+        var co = document.createElement("option");
+        co.value = b.category;
+        co.textContent = b.category;
+        editCategory.appendChild(co);
+        editCategory.selectedIndex = 0;
+      }
+
+      populateThemeDropdown(editTheme);
+      var ti = findThemePresetIndex(b.theme);
+      if (ti >= 0 && editTheme) {
+        editTheme.selectedIndex = ti;
+      } else if (editTheme) {
+        var custom = document.createElement("option");
+        custom.value = b.theme;
+        custom.textContent = "Custom";
+        editTheme.appendChild(custom);
+        editTheme.selectedIndex = editTheme.options.length - 1;
+      }
+
+      if (editMax) editMax.value = String(b.maximum);
+
+      syncEditThemeSwatch();
+      editDialog.showModal();
+      requestAnimationFrame(function () {
+        if (editMax) {
+          editMax.focus();
+          editMax.select();
+        }
+      });
+    }
+
+    function closeEditModal() {
+      pendingEditIndex = null;
+      if (editDialog && typeof editDialog.close === "function") {
+        editDialog.close();
+      }
+    }
+
+    function refreshCategorySelect() {
+      if (!catSelect) return;
+      var used = {};
+      for (var i = 0; i < budgetsState.length; i++) {
+        used[budgetsState[i].category] = true;
+      }
+      catSelect.innerHTML = "";
+      for (var j = 0; j < CATEGORY_OPTIONS.length; j++) {
+        var cat = CATEGORY_OPTIONS[j];
+        if (used[cat]) continue;
+        var opt = document.createElement("option");
+        opt.value = cat;
+        opt.textContent = cat;
+        catSelect.appendChild(opt);
+      }
+      if (catBanner) {
+        var empty = catSelect.options.length === 0;
+        catBanner.hidden = !empty;
+        catSelect.disabled = empty;
+      }
+    }
+
+    function openAddModal() {
+      if (!addDialog || typeof addDialog.showModal !== "function") return;
+      refreshCategorySelect();
+      fillThemeSelect();
+      if (maxInput) maxInput.value = "";
+      hideErr(catErr);
+      hideErr(maxErr);
+      if (catSelect && catSelect.options.length > 0) catSelect.selectedIndex = 0;
+      syncThemeSwatch();
+      addDialog.showModal();
+      requestAnimationFrame(function () {
+        if (maxInput && !maxInput.disabled) maxInput.focus();
+      });
+    }
+
+    function closeAddModal() {
+      if (addDialog && typeof addDialog.close === "function") {
+        addDialog.close();
+      }
+    }
+
+    function renderDonutAndLegend() {
+      var spents = [];
+      var themes = [];
+      var budgetLimit = 0;
+      for (var bi = 0; bi < budgetsState.length; bi++) {
+        var b = budgetsState[bi];
+        themes.push(b.theme);
+        spents.push(spentInAugust(transactions, b.category));
+        budgetLimit += b.maximum;
+      }
+      var totalSpentBudget = 0;
+      for (var si = 0; si < spents.length; si++) {
+        totalSpentBudget += spents[si];
+      }
+
+      if (donutEl) {
+        donutEl.style.background = buildConicGradient(spents, themes);
+      }
+      if (centerSpent) centerSpent.textContent = currency.format(totalSpentBudget);
+      if (centerLimit) {
+        centerLimit.textContent =
+          "of " + currency.format(budgetLimit) + " limit";
+      }
+
+      if (legendEl) {
+        legendEl.innerHTML = "";
+        for (var li = 0; li < budgetsState.length; li++) {
+          var row = document.createElement("div");
+          row.className = "budgets-legend__row";
+
+          var sw = document.createElement("span");
+          sw.className = "budgets-legend__swatch";
+          sw.style.backgroundColor = budgetsState[li].theme;
+          sw.setAttribute("aria-hidden", "true");
+
+          var lbl = document.createElement("span");
+          lbl.className = "budgets-legend__label";
+          lbl.textContent = budgetsState[li].category;
+
+          var val = document.createElement("span");
+          val.className = "budgets-legend__value";
+          val.textContent =
+            currency.format(spents[li]) +
+            " of " +
+            currency.format(budgetsState[li].maximum);
+
+          row.appendChild(sw);
+          row.appendChild(lbl);
+          row.appendChild(val);
+          legendEl.appendChild(row);
+        }
+      }
+    }
+
+    function renderCards() {
+      if (!cardsRoot) return;
+      cardsRoot.innerHTML = "";
+
+      if (budgetsState.length === 0) {
+        var empty = document.createElement("p");
+        empty.className = "budgets-empty";
+        empty.textContent = "No budgets yet. Add a budget to track spending by category.";
+        cardsRoot.appendChild(empty);
+        return;
+      }
+
+      for (var i = 0; i < budgetsState.length; i++) {
+        var b = budgetsState[i];
+        var spent = spentInAugust(transactions, b.category);
+        var remaining = b.maximum - spent;
+        var pct = b.maximum > 0 ? Math.min((spent / b.maximum) * 100, 100) : 0;
+        var latest = latestForCategory(transactions, b.category, 3);
+
+        var article = document.createElement("article");
+        article.className = "budget-card";
+
+        var header = document.createElement("header");
+        header.className = "budget-card__header";
+
+        var dot = document.createElement("span");
+        dot.className = "budget-card__dot";
+        dot.style.backgroundColor = b.theme;
+        dot.setAttribute("aria-hidden", "true");
+
+        var title = document.createElement("h3");
+        title.className = "budget-card__title";
+        title.textContent = b.category;
+
+        var menuWrap = document.createElement("div");
+        menuWrap.className = "budget-card__menu-wrap";
+
+        var menuBtn = document.createElement("button");
+        menuBtn.type = "button";
+        menuBtn.className = "budget-card__menu";
+        menuBtn.setAttribute("aria-label", b.category + " budget options");
+        menuBtn.setAttribute("aria-expanded", "false");
+        menuBtn.setAttribute("aria-haspopup", "true");
+
+        var menuImg = document.createElement("img");
+        menuImg.src = "./assets/images/icon-ellipsis.svg";
+        menuImg.alt = "";
+        menuImg.width = 21;
+        menuImg.height = 17;
+        menuBtn.appendChild(menuImg);
+
+        var dropdown = document.createElement("div");
+        dropdown.className = "budget-card__dropdown";
+        dropdown.setAttribute("role", "menu");
+        dropdown.setAttribute("aria-label", b.category + " budget actions");
+        dropdown.hidden = true;
+        dropdown.id = "budget-dd-" + i;
+
+        var editItem = document.createElement("button");
+        editItem.type = "button";
+        editItem.className = "budget-card__dropdown-item";
+        editItem.setAttribute("role", "menuitem");
+        editItem.textContent = "Edit Budget";
+
+        var sep = document.createElement("div");
+        sep.className = "budget-card__dropdown-sep";
+        sep.setAttribute("role", "separator");
+
+        var delItem = document.createElement("button");
+        delItem.type = "button";
+        delItem.className =
+          "budget-card__dropdown-item budget-card__dropdown-item--danger";
+        delItem.setAttribute("role", "menuitem");
+        delItem.textContent = "Delete Budget";
+
+        dropdown.appendChild(editItem);
+        dropdown.appendChild(sep);
+        dropdown.appendChild(delItem);
+
+        menuBtn.setAttribute("aria-controls", dropdown.id);
+
+        menuWrap.appendChild(menuBtn);
+        menuWrap.appendChild(dropdown);
+
+        (function (idx, wrap, btn, dd, ed, delb) {
+          btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            var wasOpen = !dd.hidden;
+            closeAllBudgetMenus();
+            if (!wasOpen) {
+              dd.hidden = false;
+              wrap.classList.add("is-open");
+              btn.setAttribute("aria-expanded", "true");
+            }
+          });
+          ed.addEventListener("click", function (e) {
+            e.stopPropagation();
+            closeAllBudgetMenus();
+            openEditModal(idx);
+          });
+          delb.addEventListener("click", function (e) {
+            e.stopPropagation();
+            closeAllBudgetMenus();
+            openDeleteConfirm(idx);
+          });
+        })(i, menuWrap, menuBtn, dropdown, editItem, delItem);
+
+        header.appendChild(dot);
+        header.appendChild(title);
+        header.appendChild(menuWrap);
+
+        var maxP = document.createElement("p");
+        maxP.className = "budget-card__max";
+        maxP.textContent = "Maximum of " + currency.format(b.maximum);
+
+        var progress = document.createElement("div");
+        progress.className = "budget-card__progress";
+        progress.setAttribute("role", "progressbar");
+        progress.setAttribute("aria-valuemin", "0");
+        progress.setAttribute("aria-valuemax", String(b.maximum));
+        progress.setAttribute("aria-valuenow", String(Math.min(spent, b.maximum)));
+        var fill = document.createElement("span");
+        fill.className = "budget-card__progress-fill";
+        fill.style.width = pct + "%";
+        fill.style.backgroundColor = b.theme;
+        progress.appendChild(fill);
+
+        var stats = document.createElement("div");
+        stats.className = "budget-card__stats";
+
+        var statSpent = document.createElement("div");
+        statSpent.className = "budget-card__stat budget-card__stat--spent";
+        var accSpent = document.createElement("span");
+        accSpent.className = "budget-card__stat-accent";
+        accSpent.style.backgroundColor = b.theme;
+        var innerSpent = document.createElement("div");
+        innerSpent.className = "budget-card__stat-inner";
+        var valSpent = document.createElement("span");
+        valSpent.className = "budget-card__stat-value";
+        valSpent.textContent = currency.format(spent);
+        var labSpent = document.createElement("span");
+        labSpent.className = "budget-card__stat-label";
+        labSpent.textContent = "Spent";
+        innerSpent.appendChild(valSpent);
+        innerSpent.appendChild(labSpent);
+        statSpent.appendChild(accSpent);
+        statSpent.appendChild(innerSpent);
+
+        var divider = document.createElement("div");
+        divider.className = "budget-card__stats-divider";
+        divider.setAttribute("aria-hidden", "true");
+
+        var statRem = document.createElement("div");
+        statRem.className = "budget-card__stat budget-card__stat--remaining";
+        var accRem = document.createElement("span");
+        accRem.className = "budget-card__stat-accent";
+        var innerRem = document.createElement("div");
+        innerRem.className = "budget-card__stat-inner";
+        var valRem = document.createElement("span");
+        valRem.className = "budget-card__stat-value";
+        valRem.textContent = currency.format(remaining);
+        var labRem = document.createElement("span");
+        labRem.className = "budget-card__stat-label";
+        labRem.textContent = "Remaining";
+        innerRem.appendChild(valRem);
+        innerRem.appendChild(labRem);
+        statRem.appendChild(accRem);
+        statRem.appendChild(innerRem);
+
+        stats.appendChild(statSpent);
+        stats.appendChild(divider);
+        stats.appendChild(statRem);
+
+        var latestWrap = document.createElement("div");
+        latestWrap.className = "budget-card__latest";
+
+        var latestHead = document.createElement("div");
+        latestHead.className = "budget-card__latest-header";
+        var latestTitle = document.createElement("h4");
+        latestTitle.className = "budget-card__latest-title";
+        latestTitle.textContent = "Latest Spending";
+        var seeAll = document.createElement("a");
+        seeAll.className = "budget-card__latest-link";
+        seeAll.href =
+          "./transactions.html?category=" + encodeURIComponent(b.category);
+        seeAll.textContent = "See All";
+        var chev = document.createElement("img");
+        chev.className = "budget-card__latest-link-icon";
+        chev.src = "./assets/images/icon-caret-right.svg";
+        chev.alt = "";
+        chev.width = 6;
+        chev.height = 11;
+        seeAll.appendChild(chev);
+        latestHead.appendChild(latestTitle);
+        latestHead.appendChild(seeAll);
+
+        var list = document.createElement("ul");
+        list.className = "budget-card__tx-list";
+
+        for (var ti = 0; ti < latest.length; ti++) {
+          var tx = latest[ti];
+          var li = document.createElement("li");
+          li.className = "budget-card__tx-item";
+
+          var slot = document.createElement("div");
+          slot.className = "budget-card__tx-avatar-slot";
+          var img = document.createElement("img");
+          img.className = "budget-card__tx-avatar";
+          img.alt = "";
+          img.src = tx.avatar;
+          img.loading = "lazy";
+          (function (imgEl, cell, nm) {
+            imgEl.addEventListener("error", function () {
+              imgEl.remove();
+              var fb = document.createElement("span");
+              fb.className = "budget-card__tx-fallback";
+              fb.textContent = initials(nm);
+              cell.appendChild(fb);
+            });
+          })(img, slot, tx.name);
+          slot.appendChild(img);
+
+          var nmEl = document.createElement("p");
+          nmEl.className = "budget-card__tx-name";
+          nmEl.textContent = tx.name;
+
+          var meta = document.createElement("div");
+          meta.className = "budget-card__tx-meta";
+          var am = document.createElement("p");
+          am.className = "budget-card__tx-amount";
+          am.textContent =
+            (tx.amount >= 0 ? "+" : "-") +
+            currency.format(Math.abs(tx.amount));
+          var dt = document.createElement("p");
+          dt.className = "budget-card__tx-date";
+          dt.textContent = dateFmt.format(parseISO(tx.date));
+          meta.appendChild(am);
+          meta.appendChild(dt);
+
+          li.appendChild(slot);
+          li.appendChild(nmEl);
+          li.appendChild(meta);
+          list.appendChild(li);
+        }
+
+        latestWrap.appendChild(latestHead);
+        latestWrap.appendChild(list);
+
+        article.appendChild(header);
+        article.appendChild(maxP);
+        article.appendChild(progress);
+        article.appendChild(stats);
+        article.appendChild(latestWrap);
+
+        cardsRoot.appendChild(article);
+      }
+    }
+
+    function renderAll() {
+      renderDonutAndLegend();
+      renderCards();
+    }
+
+    if (themeSelect) {
+      themeSelect.addEventListener("change", syncThemeSwatch);
+    }
+
+    if (editTheme) {
+      editTheme.addEventListener("change", syncEditThemeSwatch);
+    }
+
+    if (editClose && editDialog) {
+      editClose.addEventListener("click", closeEditModal);
+    }
+
+    if (editDialog) {
+      editDialog.addEventListener("click", function (e) {
+        if (e.target === editDialog) closeEditModal();
+      });
+    }
+
+    if (editForm && editDialog) {
+      editForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        hideErr(editMaxErr);
+        if (pendingEditIndex === null) return;
+        var idx = pendingEditIndex;
+        var raw = editMax ? editMax.value.trim() : "";
+        var maxNum = raw === "" ? NaN : Number(raw);
+        if (!Number.isFinite(maxNum) || maxNum <= 0) {
+          showErr(editMaxErr, "Enter a maximum spend greater than zero.");
+          if (editMax) editMax.setAttribute("aria-invalid", "true");
+          return;
+        }
+        if (editMax) editMax.removeAttribute("aria-invalid");
+
+        var row = budgetsState[idx];
+        if (!row) {
+          closeEditModal();
+          return;
+        }
+        row.maximum = maxNum;
+        row.theme = editTheme ? editTheme.value : row.theme;
+        closeEditModal();
+        renderAll();
+      });
+    }
+
+    if (addBtn && addDialog) {
+      addBtn.addEventListener("click", openAddModal);
+    }
+
+    if (modalClose && addDialog) {
+      modalClose.addEventListener("click", closeAddModal);
+    }
+
+    if (addDialog) {
+      addDialog.addEventListener("click", function (e) {
+        if (e.target === addDialog) closeAddModal();
+      });
+    }
+
+    if (deleteYes) {
+      deleteYes.addEventListener("click", confirmDeleteBudget);
+    }
+    if (deleteNo) {
+      deleteNo.addEventListener("click", closeDeleteDialog);
+    }
+    if (deleteClose && deleteDialog) {
+      deleteClose.addEventListener("click", closeDeleteDialog);
+    }
+    if (deleteDialog) {
+      deleteDialog.addEventListener("click", function (e) {
+        if (e.target === deleteDialog) closeDeleteDialog();
+      });
+    }
+
+    if (addForm && addDialog) {
+      addForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        hideErr(catErr);
+        hideErr(maxErr);
+        if (!catSelect || catSelect.disabled || catSelect.options.length === 0) {
+          showErr(catErr, "No categories available to budget.");
+          return;
+        }
+        var raw = maxInput ? maxInput.value.trim() : "";
+        var maxNum = raw === "" ? NaN : Number(raw);
+        if (!Number.isFinite(maxNum) || maxNum <= 0) {
+          showErr(maxErr, "Enter a maximum spend greater than zero.");
+          if (maxInput) maxInput.setAttribute("aria-invalid", "true");
+          return;
+        }
+        if (maxInput) maxInput.removeAttribute("aria-invalid");
+
+        var themeHex = themeSelect ? themeSelect.value : "#277C78";
+        budgetsState.push({
+          category: catSelect.value,
+          maximum: maxNum,
+          theme: themeHex,
+        });
+        renderAll();
+        closeAddModal();
+      });
+    }
+
+    fetch("./data.json")
+      .then(function (res) {
+        if (!res.ok) throw new Error("Failed to load data");
+        return res.json();
+      })
+      .then(function (data) {
+        transactions = data.transactions || [];
+        budgetsState = (data.budgets || []).slice();
+        renderAll();
+        main.removeAttribute("aria-busy");
+      })
+      .catch(function () {
+        main.removeAttribute("aria-busy");
+        var err = document.createElement("p");
+        err.className = "budgets-error";
+        err.setAttribute("role", "alert");
+        err.textContent =
+          "Could not load finance data. Serve this folder over HTTP so data.json can be fetched.";
+        main.insertBefore(err, main.firstChild);
+      });
+  });
+})();
