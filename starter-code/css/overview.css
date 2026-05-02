@@ -672,6 +672,19 @@
   .summary-cards {
     grid-template-columns: 1fr;
   }
+
+  .summary-card {
+    text-align: center;
+  }
+
+  .pots-total {
+    align-items: center;
+    text-align: center;
+  }
+
+  .pots-total__label {
+    justify-content: center;
+  }
 }
 
 /* Stack overview columns earlier — otherwise each ~½ shell width is too narrow beside the sidebar */
