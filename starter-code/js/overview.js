@@ -125,6 +125,44 @@
 
   var REMOVED_RECURRING_KEY = "pf-recurring-removed-bills";
   var BILL_PROPS_KEY = "pf-recurring-bill-props";
+  var CUSTOM_BILLS_KEY = "pf-recurring-custom-bills";
+  var PAID_OVERRIDES_KEY = "pf-recurring-paid-overrides";
+
+  function loadCustomBillsOverview() {
+    try {
+      var raw = localStorage.getItem(CUSTOM_BILLS_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function customBillToTemplateOverview(c) {
+    var day = Math.max(1, Math.min(31, Number(c.dueDay)));
+    var d = new Date(Date.UTC(2024, 7, day));
+    return {
+      name: "__pf_custom_" + c.id,
+      amount: -Math.abs(Number(c.amount)),
+      date: d.toISOString().slice(0, 10),
+      recurring: true,
+      category: "Bills",
+      avatar: "./assets/images/icon-recurring-bills.svg",
+    };
+  }
+
+  function loadPaidOverridesOverview() {
+    try {
+      var raw = localStorage.getItem(PAID_OVERRIDES_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function yearMonthKeyOverview(y, m0) {
+    return y + "-" + String(m0 + 1).padStart(2, "0");
+  }
 
   function loadBillPropsOverview() {
     try {
@@ -136,6 +174,13 @@
   }
 
   function effectiveAmountOverview(template) {
+    if (template.name.indexOf("__pf_custom_") === 0) {
+      var cid = template.name.slice("__pf_custom_".length);
+      var list = loadCustomBillsOverview();
+      for (var ci = 0; ci < list.length; ci++) {
+        if (list[ci].id === cid) return Math.abs(Number(list[ci].amount));
+      }
+    }
     var p = loadBillPropsOverview()[template.name];
     if (
       p &&
@@ -149,6 +194,16 @@
   }
 
   function effectiveDueDayOverview(template) {
+    if (template.name.indexOf("__pf_custom_") === 0) {
+      var cid2 = template.name.slice("__pf_custom_".length);
+      var list2 = loadCustomBillsOverview();
+      for (var cj = 0; cj < list2.length; cj++) {
+        if (list2[cj].id === cid2) {
+          var dd = list2[cj].dueDay;
+          if (typeof dd === "number" && dd >= 1 && dd <= 31) return dd;
+        }
+      }
+    }
     var p = loadBillPropsOverview()[template.name];
     if (
       p &&
@@ -174,9 +229,11 @@
 
   function recurringTemplatesVisibleForOverview(transactions) {
     var removed = loadRemovedRecurringBillNames();
-    return uniqueRecurringLatest(transactions).filter(function (v) {
+    var fromTx = uniqueRecurringLatest(transactions).filter(function (v) {
       return !removed.has(v.name);
     });
+    var customs = loadCustomBillsOverview().map(customBillToTemplateOverview);
+    return fromTx.concat(customs);
   }
 
   function paidRecurringInMonth(transactions, year, monthIndex) {
@@ -204,16 +261,33 @@
   }
 
   function recurringPaidSumForMonth(transactions, year, monthIndex) {
+    var visible = recurringTemplatesVisibleForOverview(transactions);
     var visibleNames = new Set();
-    var vis = recurringTemplatesVisibleForOverview(transactions);
-    for (var i = 0; i < vis.length; i++) {
-      visibleNames.add(vis[i].name);
+    for (var i = 0; i < visible.length; i++) {
+      visibleNames.add(visible[i].name);
     }
+
     var paid = paidRecurringInMonth(transactions, year, monthIndex);
+    var namesPaidByTx = new Set();
     var sum = 0;
-    for (var i = 0; i < paid.length; i++) {
-      if (visibleNames.has(paid[i].name)) {
-        sum += Math.abs(paid[i].amount);
+    for (var j = 0; j < paid.length; j++) {
+      var pt = paid[j];
+      if (!visibleNames.has(pt.name)) continue;
+      namesPaidByTx.add(pt.name);
+      sum += Math.abs(pt.amount);
+    }
+
+    var mo = loadPaidOverridesOverview()[yearMonthKeyOverview(year, monthIndex)];
+    if (mo) {
+      for (var nm in mo) {
+        if (!mo[nm] || !visibleNames.has(nm)) continue;
+        if (namesPaidByTx.has(nm)) continue;
+        for (var v = 0; v < visible.length; v++) {
+          if (visible[v].name === nm) {
+            sum += effectiveAmountOverview(visible[v]);
+            break;
+          }
+        }
       }
     }
     return sum;

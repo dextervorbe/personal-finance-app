@@ -202,7 +202,55 @@
     saveBillProps(all);
   }
 
+  var CUSTOM_BILLS_KEY = "pf-recurring-custom-bills";
+
+  function loadCustomBills() {
+    try {
+      var raw = localStorage.getItem(CUSTOM_BILLS_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveCustomBills(arr) {
+    try {
+      localStorage.setItem(CUSTOM_BILLS_KEY, JSON.stringify(arr));
+    } catch (e) {
+      /* quota / private mode */
+    }
+  }
+
+  function newCustomBillId() {
+    return (
+      "c" +
+      Date.now().toString(36) +
+      Math.random().toString(36).replace(/[^a-z0-9]/gi, "").slice(0, 8)
+    );
+  }
+
+  function customBillToTemplate(c) {
+    var day = Math.max(1, Math.min(31, Number(c.dueDay)));
+    var d = new Date(Date.UTC(2024, 7, day));
+    return {
+      name: "__pf_custom_" + c.id,
+      amount: -Math.abs(Number(c.amount)),
+      date: d.toISOString().slice(0, 10),
+      recurring: true,
+      category: "Bills",
+      avatar: "./assets/images/icon-recurring-bills.svg",
+    };
+  }
+
   function effectiveDisplayName(template) {
+    if (template.name.indexOf("__pf_custom_") === 0) {
+      var cid = template.name.slice("__pf_custom_".length);
+      var list = loadCustomBills();
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].id === cid) return list[i].name;
+      }
+    }
     var p = loadBillProps()[template.name];
     if (p && p.displayName && String(p.displayName).trim()) {
       return String(p.displayName).trim();
@@ -211,6 +259,13 @@
   }
 
   function effectiveAmount(template) {
+    if (template.name.indexOf("__pf_custom_") === 0) {
+      var cid = template.name.slice("__pf_custom_".length);
+      var list = loadCustomBills();
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].id === cid) return Math.abs(Number(list[i].amount));
+      }
+    }
     var p = loadBillProps()[template.name];
     if (
       p &&
@@ -224,6 +279,16 @@
   }
 
   function effectiveDueDay(template) {
+    if (template.name.indexOf("__pf_custom_") === 0) {
+      var cid2 = template.name.slice("__pf_custom_".length);
+      var list2 = loadCustomBills();
+      for (var j = 0; j < list2.length; j++) {
+        if (list2[j].id === cid2) {
+          var dd = list2[j].dueDay;
+          if (typeof dd === "number" && dd >= 1 && dd <= 31) return dd;
+        }
+      }
+    }
     var p = loadBillProps()[template.name];
     if (
       p &&
@@ -246,6 +311,29 @@
   }
 
   function persistBillProps(canonicalName, template, fields) {
+    if (canonicalName.indexOf("__pf_custom_") === 0) {
+      var cid = canonicalName.slice("__pf_custom_".length);
+      var list = loadCustomBills();
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].id !== cid) continue;
+        var dn = String(fields.displayName || "").trim();
+        if (dn) list[i].name = dn;
+        if (typeof fields.amount === "number" && !isNaN(fields.amount) && fields.amount >= 0) {
+          list[i].amount = fields.amount;
+        }
+        if (
+          typeof fields.dueDay === "number" &&
+          fields.dueDay >= 1 &&
+          fields.dueDay <= 31
+        ) {
+          list[i].dueDay = fields.dueDay;
+        }
+        saveCustomBills(list);
+        return;
+      }
+      return;
+    }
+
     var all = loadBillProps();
     var entry = {};
     var baseAmount = Math.abs(template.amount);
@@ -279,6 +367,16 @@
   }
 
   function addRemovedBillName(name) {
+    if (name.indexOf("__pf_custom_") === 0) {
+      var rid = name.slice("__pf_custom_".length);
+      var filtered = loadCustomBills().filter(function (c) {
+        return c.id !== rid;
+      });
+      saveCustomBills(filtered);
+      stripManualPaidForName(name);
+      stripBillPropsForName(name);
+      return;
+    }
     var s = loadRemovedBillNames();
     s.add(name);
     saveRemovedBillNames(s);
@@ -287,9 +385,11 @@
   }
 
   function recurringTemplatesVisible(transactions, removedSet) {
-    return uniqueRecurringLatest(transactions).filter(function (v) {
+    var fromTx = uniqueRecurringLatest(transactions).filter(function (v) {
       return !removedSet.has(v.name);
     });
+    var customs = loadCustomBills().map(customBillToTemplate);
+    return fromTx.concat(customs);
   }
 
   function hasRecurringPaymentTx(transactions, name, y, m0) {
@@ -376,6 +476,7 @@
     var billAmountErr = document.getElementById("recurring-bill-amount-err");
     var billDueErr = document.getElementById("recurring-bill-dueday-err");
     var billDialogTitle = document.getElementById("recurring-bill-dialog-title");
+    var billDialogDesc = document.getElementById("recurring-bill-dialog-desc");
     var billPeriodLabel = document.getElementById("recurring-bill-period-label");
     var billPaidAction = document.getElementById("recurring-bill-paid-action");
     var billRemoveBtn = document.getElementById("recurring-bill-remove");
@@ -387,6 +488,19 @@
     var recurringDeleteTitle = document.getElementById("recurring-delete-title");
     var recurringDeleteLede = document.getElementById("recurring-delete-lede");
     var pendingDeleteCanonical = null;
+
+    var addDialog = document.getElementById("recurring-add-dialog");
+    var addOpenBtn = document.getElementById("recurring-add-open");
+    var addCloseBtn = document.getElementById("recurring-add-close");
+    var addForm = document.getElementById("recurring-add-form");
+    var recurringAddName = document.getElementById("recurring-add-name");
+    var recurringAddDueDay = document.getElementById("recurring-add-dueday");
+    var recurringAddAmount = document.getElementById("recurring-add-amount");
+    var recurringAddPaid = document.getElementById("recurring-add-paid");
+    var recurringAddPaidLabel = document.getElementById("recurring-add-paid-label");
+    var recurringAddNameErr = document.getElementById("recurring-add-name-err");
+    var recurringAddDueErr = document.getElementById("recurring-add-dueday-err");
+    var recurringAddAmountErr = document.getElementById("recurring-add-amount-err");
 
     var viewYear = 2024;
     var viewMonth = 7;
@@ -782,6 +896,12 @@
       if (billDialogTitle) {
         billDialogTitle.textContent = effectiveDisplayName(template);
       }
+      if (billDialogDesc) {
+        billDialogDesc.textContent =
+          template.name.indexOf("__pf_custom_") === 0
+            ? "Update this bill's details. This bill was added manually and is stored only in this browser."
+            : "Update how this bill appears, its monthly amount, and the day of month it is due. Payments from your transaction history still match the original bill name in data.";
+      }
       if (billPeriodLabel) {
         billPeriodLabel.textContent = MONTH_SHORT[viewMonth] + " " + viewYear;
       }
@@ -892,6 +1012,108 @@
     if (recurringDeleteDialog) {
       recurringDeleteDialog.addEventListener("click", function (e) {
         if (e.target === recurringDeleteDialog) closeRecurringDeleteConfirm();
+      });
+    }
+
+    function hideAddFormErrors() {
+      var els = [recurringAddNameErr, recurringAddDueErr, recurringAddAmountErr];
+      for (var ai = 0; ai < els.length; ai++) {
+        var el = els[ai];
+        if (el) {
+          el.hidden = true;
+          el.textContent = "";
+        }
+      }
+    }
+
+    function syncAddPaidCheckboxLabel() {
+      if (recurringAddPaidLabel) {
+        recurringAddPaidLabel.textContent =
+          "Already paid for " + MONTH_SHORT[viewMonth] + " " + viewYear;
+      }
+    }
+
+    function closeAddDialog() {
+      if (addDialog && typeof addDialog.close === "function") {
+        addDialog.close();
+      }
+    }
+
+    function openAddDialog() {
+      if (!addDialog || typeof addDialog.showModal !== "function") return;
+      hideAddFormErrors();
+      if (recurringAddName) recurringAddName.value = "";
+      if (recurringAddDueDay) recurringAddDueDay.value = "";
+      if (recurringAddAmount) recurringAddAmount.value = "";
+      if (recurringAddPaid) recurringAddPaid.checked = false;
+      syncAddPaidCheckboxLabel();
+      addDialog.showModal();
+      setTimeout(function () {
+        if (recurringAddName) recurringAddName.focus();
+      }, 0);
+    }
+
+    if (addOpenBtn) {
+      addOpenBtn.addEventListener("click", openAddDialog);
+    }
+    if (addCloseBtn) {
+      addCloseBtn.addEventListener("click", closeAddDialog);
+    }
+    if (addDialog) {
+      addDialog.addEventListener("click", function (e) {
+        if (e.target === addDialog) closeAddDialog();
+      });
+    }
+
+    if (addForm) {
+      addForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        hideAddFormErrors();
+        var dn = recurringAddName ? recurringAddName.value.trim() : "";
+        if (!dn) {
+          if (recurringAddNameErr) {
+            recurringAddNameErr.textContent = "Enter a bill name.";
+            recurringAddNameErr.hidden = false;
+          }
+          return;
+        }
+        var dd = recurringAddDueDay
+          ? parseInt(recurringAddDueDay.value, 10)
+          : NaN;
+        if (isNaN(dd) || dd < 1 || dd > 31) {
+          if (recurringAddDueErr) {
+            recurringAddDueErr.textContent = "Enter a due day from 1 to 31.";
+            recurringAddDueErr.hidden = false;
+          }
+          return;
+        }
+        var amt = recurringAddAmount
+          ? parseFloat(recurringAddAmount.value)
+          : NaN;
+        if (isNaN(amt) || amt < 0) {
+          if (recurringAddAmountErr) {
+            recurringAddAmountErr.textContent =
+              "Enter a valid amount (0 or more).";
+            recurringAddAmountErr.hidden = false;
+          }
+          return;
+        }
+        var id = newCustomBillId();
+        var entry = {
+          id: id,
+          name: dn,
+          amount: amt,
+          dueDay: dd,
+        };
+        var list = loadCustomBills();
+        list.push(entry);
+        saveCustomBills(list);
+        var canon = "__pf_custom_" + id;
+        if (recurringAddPaid && recurringAddPaid.checked) {
+          setManualPaidForMonth(viewYear, viewMonth, canon, true);
+        }
+        closeAddDialog();
+        refresh();
       });
     }
 

@@ -96,7 +96,9 @@
   <div class="app-shell">
     <main id="main-content" class="recurring-page" aria-busy="true">
       <header class="recurring-page__header">
-        <h1 class="recurring-page__title">Recurring Bills</h1>
+        <div class="recurring-page__header-start">
+          <h1 class="recurring-page__title">Recurring Bills</h1>
+        </div>
         <div class="recurring-page__header-mid">
           <div class="budgets-month-nav" id="recurring-month-nav">
             <div class="budgets-month-nav__year-wrap" aria-hidden="true">
@@ -156,6 +158,11 @@
               </button>
             </div>
           </div>
+        </div>
+        <div class="recurring-page__header-end">
+          <button type="button" class="transactions-add-btn" id="recurring-add-open">
+            + Add New Recurring Bill
+          </button>
         </div>
       </header>
 
@@ -244,12 +251,82 @@
     </main>
   </div>
 
+  <dialog class="tx-modal" id="recurring-add-dialog" aria-labelledby="recurring-add-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="recurring-add-title" class="tx-modal__title">Add recurring bill</h2>
+          <p class="tx-modal__desc">
+            Add a bill that is not in your transactions yet. It is saved in this browser only.
+          </p>
+        </div>
+        <button type="button" class="tx-modal__close" id="recurring-add-close" aria-label="Close dialog">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+
+      <form class="tx-modal__form" id="recurring-add-form" novalidate>
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="recurring-add-name">Bill name</label>
+          <input
+            type="text"
+            id="recurring-add-name"
+            class="tx-modal__input"
+            maxlength="80"
+            autocomplete="off"
+            aria-describedby="recurring-add-name-err"
+          >
+          <span id="recurring-add-name-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="recurring-add-dueday">Day of month due</label>
+          <input
+            type="number"
+            id="recurring-add-dueday"
+            class="tx-modal__input"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            aria-describedby="recurring-add-dueday-err"
+          >
+          <span id="recurring-add-dueday-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="recurring-add-amount">Amount</label>
+          <div class="budget-max-input">
+            <span class="budget-max-input__prefix" aria-hidden="true">$</span>
+            <input
+              type="number"
+              id="recurring-add-amount"
+              class="budget-max-input__control"
+              inputmode="decimal"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              aria-describedby="recurring-add-amount-err"
+            >
+          </div>
+          <span id="recurring-add-amount-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <label class="tx-modal__check">
+          <input type="checkbox" id="recurring-add-paid" name="alreadyPaid">
+          <span class="tx-modal__check-label" id="recurring-add-paid-label">Already paid for this month</span>
+        </label>
+
+        <button type="submit" class="tx-modal__submit" id="recurring-add-submit">Add recurring bill</button>
+      </form>
+    </div>
+  </dialog>
+
   <dialog class="tx-modal" id="recurring-bill-dialog" aria-labelledby="recurring-bill-dialog-title">
     <div class="tx-modal__surface">
       <header class="tx-modal__header">
         <div class="tx-modal__heading-block">
           <h2 id="recurring-bill-dialog-title" class="tx-modal__title">Edit recurring bill</h2>
-          <p class="tx-modal__desc">
+          <p id="recurring-bill-dialog-desc" class="tx-modal__desc">
             Update how this bill appears, its monthly amount, and the day of month it is due. Payments from your transaction history still match the original bill name in data.
           </p>
         </div>
