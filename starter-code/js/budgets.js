@@ -167,6 +167,7 @@
     var cardsRoot = document.getElementById("budgets-cards-root");
 
     var budgetMonthYear = document.getElementById("budget-month-year");
+    var budgetYearPanel = document.getElementById("budget-month-year-panel");
     var budgetMonthStrip = document.getElementById("budget-month-strip");
 
     var MONTH_STRIP_SLOTS = 7;
@@ -859,6 +860,23 @@
         renderAll();
       });
     }
+
+    if (typeof initBudgetYearPicker === "function") {
+      initBudgetYearPicker({
+        button: budgetMonthYear,
+        panel: budgetYearPanel,
+        getYear: function () {
+          return viewYear;
+        },
+        setYear: function (y) {
+          viewYear = y;
+        },
+        onCommit: function () {
+          renderAll();
+        },
+      });
+    }
+
     if (themeSelect) {
       themeSelect.addEventListener("change", syncThemeSwatch);
     }

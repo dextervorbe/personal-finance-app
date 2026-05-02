@@ -107,10 +107,13 @@
         </div>
         <div class="transactions-page__header-mid">
           <div class="budgets-month-nav" id="cc-month-nav">
-            <div class="budgets-month-nav__year-wrap" aria-hidden="true">
-              <span class="budgets-month-nav__year-rule"></span>
-              <span class="budgets-month-nav__year" id="cc-month-year"></span>
-              <span class="budgets-month-nav__year-rule"></span>
+            <div class="budgets-month-nav__year-wrap">
+              <span class="budgets-month-nav__year-rule" aria-hidden="true"></span>
+              <div class="budgets-year-picker">
+                <button type="button" id="cc-month-year" class="budgets-month-nav__year budgets-month-nav__year-btn" aria-label="Year" aria-haspopup="listbox" aria-expanded="false"></button>
+                <div id="cc-month-year-panel" class="budgets-year-picker__dropdown" role="listbox" aria-label="Choose year" hidden></div>
+              </div>
+              <span class="budgets-month-nav__year-rule" aria-hidden="true"></span>
             </div>
             <div class="budgets-month-nav__strip month-nav-strip" id="cc-month-strip" role="group" aria-label="Credit card transactions month">
               <button type="button" class="budgets-month-card">
@@ -426,6 +429,7 @@
 
   <script src="./js/theme.js" defer></script>
   <script src="./js/sidebar.js" defer></script>
+  <script src="./js/budget-year-picker.js" defer></script>
   <script src="./js/credit-cards.js" defer></script>
 </body>
 </html>

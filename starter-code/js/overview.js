@@ -462,6 +462,7 @@
     if (!main) return;
 
     var overviewMonthYear = document.getElementById("overview-month-year");
+    var overviewYearPanel = document.getElementById("overview-month-year-panel");
     var overviewMonthStrip = document.getElementById("overview-month-strip");
 
     var viewYear = 2026;
@@ -689,6 +690,22 @@
         viewYear = t.y;
         viewMonth = t.m;
         renderAll();
+      });
+    }
+
+    if (typeof initBudgetYearPicker === "function") {
+      initBudgetYearPicker({
+        button: overviewMonthYear,
+        panel: overviewYearPanel,
+        getYear: function () {
+          return viewYear;
+        },
+        setYear: function (y) {
+          viewYear = y;
+        },
+        onCommit: function () {
+          renderAll();
+        },
       });
     }
 

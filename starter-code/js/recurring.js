@@ -455,6 +455,7 @@
     if (!main) return;
 
     var recurringMonthYear = document.getElementById("recurring-month-year");
+    var recurringYearPanel = document.getElementById("recurring-month-year-panel");
     var recurringMonthStrip = document.getElementById("recurring-month-strip");
 
     var totalEl = document.getElementById("recurring-total-bills");
@@ -1135,6 +1136,22 @@
         viewYear = t.y;
         viewMonth = t.m;
         refresh();
+      });
+    }
+
+    if (typeof initBudgetYearPicker === "function") {
+      initBudgetYearPicker({
+        button: recurringMonthYear,
+        panel: recurringYearPanel,
+        getYear: function () {
+          return viewYear;
+        },
+        setYear: function (y) {
+          viewYear = y;
+        },
+        onCommit: function () {
+          refresh();
+        },
       });
     }
 

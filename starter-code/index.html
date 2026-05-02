@@ -105,10 +105,13 @@
         <h1 class="overview__title">Overview</h1>
         <div class="overview-page__header-mid">
           <div class="budgets-month-nav" id="overview-month-nav">
-            <div class="budgets-month-nav__year-wrap" aria-hidden="true">
-              <span class="budgets-month-nav__year-rule"></span>
-              <span class="budgets-month-nav__year" id="overview-month-year"></span>
-              <span class="budgets-month-nav__year-rule"></span>
+            <div class="budgets-month-nav__year-wrap">
+              <span class="budgets-month-nav__year-rule" aria-hidden="true"></span>
+              <div class="budgets-year-picker">
+                <button type="button" id="overview-month-year" class="budgets-month-nav__year budgets-month-nav__year-btn" aria-label="Year" aria-haspopup="listbox" aria-expanded="false"></button>
+                <div id="overview-month-year-panel" class="budgets-year-picker__dropdown" role="listbox" aria-label="Choose year" hidden></div>
+              </div>
+              <span class="budgets-month-nav__year-rule" aria-hidden="true"></span>
             </div>
             <div class="budgets-month-nav__strip month-nav-strip" id="overview-month-strip" role="group" aria-label="Overview month">
               <button type="button" class="budgets-month-card">
@@ -275,6 +278,7 @@
 
   <script src="./js/theme.js" defer></script>
   <script src="./js/sidebar.js" defer></script>
+  <script src="./js/budget-year-picker.js" defer></script>
   <script src="./js/overview.js" defer></script>
 </body>
 </html>

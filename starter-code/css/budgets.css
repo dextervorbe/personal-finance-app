@@ -59,6 +59,7 @@
   background-color: var(--color-card);
   border: 1px solid var(--color-divider);
   box-shadow: 0 2px 12px rgb(32 31 36 / 0.06);
+  overflow: visible;
 }
 
 [data-theme="dark"] .budgets-month-nav {
@@ -91,6 +92,144 @@
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   text-orientation: mixed;
+}
+
+/* Themed year picker (replaces native select) */
+.budgets-year-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.budgets-month-nav__year-btn {
+  margin: 0;
+  padding: 0.2rem 0.2rem;
+  max-width: 2.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  background-color: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  letter-spacing: 0.08em;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-orientation: mixed;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.budgets-month-nav__year-btn:hover {
+  color: var(--color-heading);
+  background-color: rgb(255 255 255 / 0.06);
+  border-color: var(--color-divider);
+}
+
+[data-theme="light"] .budgets-month-nav__year-btn:hover {
+  background-color: rgb(32 31 36 / 0.05);
+}
+
+.budgets-month-nav__year-btn:focus {
+  outline: none;
+}
+
+.budgets-month-nav__year-btn:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 2px;
+}
+
+.budgets-month-nav__year-btn[aria-expanded="true"] {
+  color: var(--color-heading);
+  background-color: rgb(255 255 255 / 0.08);
+  border-color: var(--color-divider);
+}
+
+[data-theme="light"] .budgets-month-nav__year-btn[aria-expanded="true"] {
+  background-color: rgb(32 31 36 / 0.06);
+}
+
+.budgets-year-picker__dropdown {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 0.45rem);
+  transform: translateY(-50%);
+  z-index: 30;
+  min-width: 5.25rem;
+  max-height: min(12rem, 42vh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.35rem;
+  margin: 0;
+  border-radius: 0.5rem;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-divider);
+  box-shadow:
+    0 4px 16px rgb(0 0 0 / 0.25),
+    0 0 0 1px rgb(255 255 255 / 0.04) inset;
+  scrollbar-width: thin;
+}
+
+[data-theme="light"] .budgets-year-picker__dropdown {
+  box-shadow:
+    0 6px 24px rgb(32 31 36 / 0.12),
+    0 0 0 1px rgb(32 31 36 / 0.06) inset;
+}
+
+.budgets-year-picker__dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.budgets-year-picker__dropdown::-webkit-scrollbar-thumb {
+  background-color: var(--color-divider);
+  border-radius: 999px;
+}
+
+.budgets-year-picker__option {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.45rem 0.65rem;
+  border: none;
+  border-radius: 0.35rem;
+  background-color: transparent;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.budgets-year-picker__option:hover {
+  background-color: rgb(255 255 255 / 0.07);
+}
+
+[data-theme="light"] .budgets-year-picker__option:hover {
+  background-color: rgb(32 31 36 / 0.06);
+}
+
+.budgets-year-picker__option--selected {
+  background-color: rgb(39 124 120 / 0.22);
+  color: var(--color-accent-green);
+}
+
+[data-theme="light"] .budgets-year-picker__option--selected {
+  background-color: rgb(39 124 120 / 0.14);
+}
+
+@media (max-width: 52rem) {
+  .budgets-year-picker__dropdown {
+    left: auto;
+    right: calc(100% + 0.45rem);
+    transform: translateY(-50%);
+  }
 }
 
 .budgets-month-nav__strip {

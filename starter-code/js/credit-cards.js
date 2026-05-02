@@ -528,6 +528,7 @@
     var pendingDeleteTxId = null;
 
     var txMonthYear = document.getElementById("cc-month-year");
+    var txYearPanel = document.getElementById("cc-month-year-panel");
     var txMonthStrip = document.getElementById("cc-month-strip");
     var monthNavYear = 2026;
     var monthNavMonth = 7;
@@ -829,6 +830,23 @@
         monthNavMonth = t.m;
         currentPage = 1;
         applyFilters();
+      });
+    }
+
+    if (typeof initBudgetYearPicker === "function") {
+      initBudgetYearPicker({
+        button: txMonthYear,
+        panel: txYearPanel,
+        getYear: function () {
+          return monthNavYear;
+        },
+        setYear: function (y) {
+          monthNavYear = y;
+        },
+        onCommit: function () {
+          currentPage = 1;
+          applyFilters();
+        },
       });
     }
 
