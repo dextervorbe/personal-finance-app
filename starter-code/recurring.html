@@ -323,6 +323,28 @@
     </div>
   </dialog>
 
+  <dialog class="tx-modal" id="recurring-delete-dialog" aria-labelledby="recurring-delete-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="recurring-delete-title" class="tx-modal__title">Delete recurring bill</h2>
+          <p id="recurring-delete-lede" class="tx-modal__desc"></p>
+        </div>
+        <button type="button" class="tx-modal__close" id="recurring-delete-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+      <div class="budget-delete-actions">
+        <button type="button" class="budget-delete-btn budget-delete-btn--danger" id="recurring-delete-yes">
+          Yes, Confirm Deletion
+        </button>
+        <button type="button" class="budget-delete-btn budget-delete-btn--ghost" id="recurring-delete-no">
+          No, Go Back
+        </button>
+      </div>
+    </div>
+  </dialog>
+
   <script src="./js/theme.js" defer></script>
   <script src="./js/sidebar.js" defer></script>
   <script src="./js/recurring.js" defer></script>

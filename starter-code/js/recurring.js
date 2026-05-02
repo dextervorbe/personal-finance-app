@@ -380,6 +380,14 @@
     var billPaidAction = document.getElementById("recurring-bill-paid-action");
     var billRemoveBtn = document.getElementById("recurring-bill-remove");
 
+    var recurringDeleteDialog = document.getElementById("recurring-delete-dialog");
+    var recurringDeleteClose = document.getElementById("recurring-delete-close");
+    var recurringDeleteYes = document.getElementById("recurring-delete-yes");
+    var recurringDeleteNo = document.getElementById("recurring-delete-no");
+    var recurringDeleteTitle = document.getElementById("recurring-delete-title");
+    var recurringDeleteLede = document.getElementById("recurring-delete-lede");
+    var pendingDeleteCanonical = null;
+
     var viewYear = 2024;
     var viewMonth = 7;
 
@@ -721,6 +729,42 @@
       }
     }
 
+    function closeRecurringDeleteConfirm() {
+      pendingDeleteCanonical = null;
+      if (
+        recurringDeleteDialog &&
+        typeof recurringDeleteDialog.close === "function"
+      ) {
+        recurringDeleteDialog.close();
+      }
+    }
+
+    function openRecurringDeleteConfirm(canonical, label) {
+      if (
+        !recurringDeleteDialog ||
+        typeof recurringDeleteDialog.showModal !== "function"
+      ) {
+        return;
+      }
+      pendingDeleteCanonical = canonical;
+      if (recurringDeleteTitle) {
+        recurringDeleteTitle.textContent = "Delete '" + label + "'";
+      }
+      if (recurringDeleteLede) {
+        recurringDeleteLede.textContent =
+          "Are you sure you want to delete this recurring bill? This action cannot be reversed, and all the data inside it will be removed forever.";
+      }
+      recurringDeleteDialog.showModal();
+    }
+
+    function confirmRecurringDelete() {
+      if (pendingDeleteCanonical === null) return;
+      var nm = pendingDeleteCanonical;
+      closeRecurringDeleteConfirm();
+      addRemovedBillName(nm);
+      refresh();
+    }
+
     function openBillDialog(template) {
       if (!billDialog || typeof billDialog.showModal !== "function") return;
       modalTemplateRef = template;
@@ -830,17 +874,24 @@
           billDisplayName && billDisplayName.value.trim()
             ? billDisplayName.value.trim()
             : nm;
-        if (
-          !nm ||
-          !window.confirm(
-            'Remove "' + shown + '" from recurring bills for this browser?'
-          )
-        ) {
-          return;
-        }
-        addRemovedBillName(nm);
+        if (!nm) return;
         closeBillDialog();
-        refresh();
+        openRecurringDeleteConfirm(nm, shown);
+      });
+    }
+
+    if (recurringDeleteYes) {
+      recurringDeleteYes.addEventListener("click", confirmRecurringDelete);
+    }
+    if (recurringDeleteNo) {
+      recurringDeleteNo.addEventListener("click", closeRecurringDeleteConfirm);
+    }
+    if (recurringDeleteClose) {
+      recurringDeleteClose.addEventListener("click", closeRecurringDeleteConfirm);
+    }
+    if (recurringDeleteDialog) {
+      recurringDeleteDialog.addEventListener("click", function (e) {
+        if (e.target === recurringDeleteDialog) closeRecurringDeleteConfirm();
       });
     }
 
