@@ -199,6 +199,48 @@
 }
 
 .transactions-table thead th:last-child,
+.transactions-table tbody tr.tx-table-row--interactive {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.transactions-table tbody tr.tx-table-row--interactive:hover {
+  background-color: var(--color-subtle-fill);
+}
+
+.transactions-table tbody tr.tx-table-row--interactive:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: -2px;
+}
+
+.tx-edit-dialog__danger-wrap {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-divider);
+}
+
+.tx-edit-dialog__remove {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: 1px solid #c94736;
+  border-radius: 0.5rem;
+  background-color: transparent;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #c94736;
+  cursor: pointer;
+}
+
+.tx-edit-dialog__remove:hover {
+  background-color: rgba(201, 71, 54, 0.08);
+}
+
+.tx-edit-dialog__remove:focus-visible {
+  outline: 2px solid #c94736;
+  outline-offset: 2px;
+}
+
 .transactions-table tbody td:last-child {
   text-align: right;
 }
@@ -287,6 +329,11 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.15s ease;
+}
+
+.tx-table-row--interactive .tx-cell-name:hover .tx-name-text {
+  color: var(--color-accent-green);
 }
 
 .tx-category-cell,

@@ -11,6 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/sidebar.css">
+  <link rel="stylesheet" href="./css/budgets.css">
   <link rel="stylesheet" href="./css/transactions.css">
 
   <title>Frontend Mentor | Personal finance app - Transactions</title>
@@ -266,6 +267,88 @@
 
         <button type="submit" class="tx-modal__submit">Add Transaction</button>
       </form>
+    </div>
+  </dialog>
+
+  <dialog class="tx-modal" id="tx-edit-dialog" aria-labelledby="tx-edit-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="tx-edit-title" class="tx-modal__title">Edit transaction</h2>
+          <p class="tx-modal__desc">Update the details for this transaction. Changes are stored in this browser only.</p>
+        </div>
+        <button type="button" class="tx-modal__close" id="tx-edit-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+
+      <form class="tx-modal__form" id="tx-edit-form" novalidate>
+        <input type="hidden" id="tx-edit-id" name="txId" value="">
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="tx-edit-name">Name</label>
+          <input type="text" id="tx-edit-name" class="tx-modal__input" maxlength="30" autocomplete="off" spellcheck="false" aria-describedby="tx-edit-name-err">
+          <span id="tx-edit-name-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="tx-edit-category">Category</label>
+          <select id="tx-edit-category" class="transactions-select tx-modal__select-full">
+            <option value="Entertainment">Entertainment</option>
+            <option value="Bills">Bills</option>
+            <option value="Groceries">Groceries</option>
+            <option value="Dining Out">Dining Out</option>
+            <option value="Transportation">Transportation</option>
+            <option value="Personal Care">Personal Care</option>
+            <option value="Education">Education</option>
+            <option value="Lifestyle">Lifestyle</option>
+            <option value="Shopping">Shopping</option>
+            <option value="General">General</option>
+          </select>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="tx-edit-date">Transaction date</label>
+          <input type="date" id="tx-edit-date" class="tx-modal__input" aria-describedby="tx-edit-date-err">
+          <span id="tx-edit-date-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="tx-edit-amount">Amount</label>
+          <input type="number" id="tx-edit-amount" class="tx-modal__input" inputmode="decimal" step="any" placeholder="0.00" aria-describedby="tx-edit-amount-err">
+          <span id="tx-edit-amount-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <button type="submit" class="tx-modal__submit">Save changes</button>
+      </form>
+
+      <div class="tx-edit-dialog__danger-wrap">
+        <button type="button" class="tx-edit-dialog__remove" id="tx-edit-remove">
+          Remove transaction
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="tx-modal" id="tx-delete-dialog" aria-labelledby="tx-delete-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="tx-delete-title" class="tx-modal__title">Delete transaction</h2>
+          <p id="tx-delete-lede" class="tx-modal__desc"></p>
+        </div>
+        <button type="button" class="tx-modal__close" id="tx-delete-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+      <div class="budget-delete-actions">
+        <button type="button" class="budget-delete-btn budget-delete-btn--danger" id="tx-delete-yes">
+          Yes, Confirm Deletion
+        </button>
+        <button type="button" class="budget-delete-btn budget-delete-btn--ghost" id="tx-delete-no">
+          No, Go Back
+        </button>
+      </div>
     </div>
   </dialog>
 

@@ -106,6 +106,125 @@
     return (n < 10 ? "0" : "") + n;
   }
 
+  var TX_DELETED_KEY = "pf-tx-deleted-ids";
+  var TX_OVERRIDES_KEY = "pf-tx-overrides";
+  var TX_ADDED_KEY = "pf-tx-user-added";
+
+  function loadDeletedIds() {
+    try {
+      var raw = localStorage.getItem(TX_DELETED_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function saveDeletedIds(set) {
+    try {
+      localStorage.setItem(TX_DELETED_KEY, JSON.stringify(Array.from(set)));
+    } catch (e) {
+      /* quota / private mode */
+    }
+  }
+
+  function loadOverrides() {
+    try {
+      var raw = localStorage.getItem(TX_OVERRIDES_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveOverrides(obj) {
+    try {
+      localStorage.setItem(TX_OVERRIDES_KEY, JSON.stringify(obj));
+    } catch (e) {
+      /* quota / private mode */
+    }
+  }
+
+  function loadAddedTransactions() {
+    try {
+      var raw = localStorage.getItem(TX_ADDED_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveAddedTransactions(arr) {
+    try {
+      localStorage.setItem(TX_ADDED_KEY, JSON.stringify(arr));
+    } catch (e) {
+      /* quota / private mode */
+    }
+  }
+
+  function newUserTxId() {
+    return (
+      "tx-u-" +
+      Date.now().toString(36) +
+      "-" +
+      Math.random().toString(36).replace(/[^a-z0-9]/gi, "").slice(0, 10)
+    );
+  }
+
+  function applyTxOverrides(tx, ov) {
+    if (!ov) return tx;
+    return {
+      avatar: tx.avatar,
+      name: ov.name !== undefined ? ov.name : tx.name,
+      category: ov.category !== undefined ? ov.category : tx.category,
+      date: ov.date !== undefined ? ov.date : tx.date,
+      amount: ov.amount !== undefined ? ov.amount : tx.amount,
+      recurring: !!tx.recurring,
+      __txId: tx.__txId,
+    };
+  }
+
+  function isoToDateInputValue(iso) {
+    var d = parseISO(iso);
+    return (
+      d.getUTCFullYear() +
+      "-" +
+      pad2(d.getUTCMonth() + 1) +
+      "-" +
+      pad2(d.getUTCDate())
+    );
+  }
+
+  function rebuildTransactionsFromStorage(jsonTransactions) {
+    var deleted = loadDeletedIds();
+    var overrides = loadOverrides();
+    var added = loadAddedTransactions();
+
+    var jsonPart = (jsonTransactions || [])
+      .map(function (t, i) {
+        var id = "tx-b-" + i;
+        if (deleted.has(id)) return null;
+        var tx = {
+          avatar: t.avatar,
+          name: t.name,
+          category: t.category,
+          date: t.date,
+          amount: t.amount,
+          recurring: !!t.recurring,
+          __txId: id,
+        };
+        return applyTxOverrides(tx, overrides[id]);
+      })
+      .filter(Boolean);
+
+    var addedPart = added.map(function (t) {
+      return applyTxOverrides(t, overrides[t.__txId]);
+    });
+
+    return addedPart.concat(jsonPart);
+  }
+
   function todayDateInputValue() {
     var now = new Date();
     return (
@@ -246,6 +365,13 @@
 
   function renderRow(tbody, t) {
     var tr = document.createElement("tr");
+    tr.className = "tx-table-row--interactive";
+    tr.setAttribute("tabindex", "0");
+    tr.dataset.txId = t.__txId || "";
+    tr.setAttribute(
+      "aria-label",
+      "Edit transaction: " + (t.name || "Transaction")
+    );
 
     var tdName = document.createElement("td");
     var cellName = document.createElement("div");
@@ -342,11 +468,128 @@
     var viewMonth = new Date().getMonth();
 
     var allTransactions = [];
+    var jsonTransactionsCache = [];
     var currentPage = 1;
+    var pendingDeleteTxId = null;
+
+    var editDialog = document.getElementById("tx-edit-dialog");
+    var editCloseBtn = document.getElementById("tx-edit-close");
+    var editForm = document.getElementById("tx-edit-form");
+    var editId = document.getElementById("tx-edit-id");
+    var editName = document.getElementById("tx-edit-name");
+    var editCategory = document.getElementById("tx-edit-category");
+    var editDate = document.getElementById("tx-edit-date");
+    var editAmount = document.getElementById("tx-edit-amount");
+    var editNameErr = document.getElementById("tx-edit-name-err");
+    var editDateErr = document.getElementById("tx-edit-date-err");
+    var editAmountErr = document.getElementById("tx-edit-amount-err");
+    var editRemoveBtn = document.getElementById("tx-edit-remove");
+
+    var deleteDialog = document.getElementById("tx-delete-dialog");
+    var deleteCloseBtn = document.getElementById("tx-delete-close");
+    var deleteYesBtn = document.getElementById("tx-delete-yes");
+    var deleteNoBtn = document.getElementById("tx-delete-no");
+    var deleteTitleEl = document.getElementById("tx-delete-title");
+    var deleteLedeEl = document.getElementById("tx-delete-lede");
 
     var params = new URLSearchParams(window.location.search);
     var fromUrl = normalizeQueryCategory(params.get("category"));
     if (fromUrl) catEl.value = fromUrl;
+
+    function rebuildAllFromCache() {
+      allTransactions = rebuildTransactionsFromStorage(jsonTransactionsCache);
+    }
+
+    function findTxById(id) {
+      for (var fi = 0; fi < allTransactions.length; fi++) {
+        if (allTransactions[fi].__txId === id) return allTransactions[fi];
+      }
+      return null;
+    }
+
+    function clearEditErrors() {
+      if (editNameErr) {
+        editNameErr.hidden = true;
+        editNameErr.textContent = "";
+      }
+      if (editDateErr) {
+        editDateErr.hidden = true;
+        editDateErr.textContent = "";
+      }
+      if (editAmountErr) {
+        editAmountErr.hidden = true;
+        editAmountErr.textContent = "";
+      }
+      if (editName) editName.removeAttribute("aria-invalid");
+      if (editDate) editDate.removeAttribute("aria-invalid");
+      if (editAmount) editAmount.removeAttribute("aria-invalid");
+    }
+
+    function closeEditModal() {
+      if (editDialog && typeof editDialog.close === "function") {
+        editDialog.close();
+      }
+    }
+
+    function openEditModal(tx) {
+      if (!editDialog || typeof editDialog.showModal !== "function") return;
+      clearEditErrors();
+      if (editId) editId.value = tx.__txId || "";
+      if (editName) editName.value = tx.name || "";
+      if (editCategory) editCategory.value = tx.category || "General";
+      if (editDate) editDate.value = isoToDateInputValue(tx.date);
+      if (editAmount) editAmount.value = String(tx.amount);
+      editDialog.showModal();
+      requestAnimationFrame(function () {
+        if (editName) editName.focus();
+      });
+    }
+
+    function closeDeleteModal() {
+      if (deleteDialog && typeof deleteDialog.close === "function") {
+        deleteDialog.close();
+      }
+    }
+
+    function openDeleteConfirm(txId, displayName) {
+      if (!deleteDialog || typeof deleteDialog.showModal !== "function") return;
+      pendingDeleteTxId = txId;
+      if (deleteTitleEl) {
+        deleteTitleEl.textContent = "Delete '" + displayName + "'";
+      }
+      if (deleteLedeEl) {
+        deleteLedeEl.textContent =
+          "Are you sure you want to delete this transaction? This action cannot be reversed, and all the data inside it will be removed forever.";
+      }
+      closeEditModal();
+      deleteDialog.showModal();
+    }
+
+    function confirmDeleteTransaction() {
+      if (!pendingDeleteTxId) return;
+      var id = pendingDeleteTxId;
+      var ovs = loadOverrides();
+      delete ovs[id];
+      saveOverrides(ovs);
+
+      if (id.indexOf("tx-u-") === 0) {
+        saveAddedTransactions(
+          loadAddedTransactions().filter(function (t) {
+            return t.__txId !== id;
+          })
+        );
+      } else {
+        var del = loadDeletedIds();
+        del.add(id);
+        saveDeletedIds(del);
+      }
+
+      if (deleteDialog && typeof deleteDialog.close === "function") {
+        deleteDialog.close();
+      }
+      rebuildAllFromCache();
+      applyFilters();
+    }
 
     function applyFilters() {
       var q = searchEl.value;
@@ -698,18 +941,147 @@
         if (!ok) return;
 
         var cat = document.getElementById("tx-add-category").value;
-        allTransactions.unshift({
+        var newTx = {
+          __txId: newUserTxId(),
           avatar: "./assets/images/avatars/__new__.jpg",
           name: nameVal,
           category: cat,
           date: dateInputToISO(addDate.value),
           amount: amtNum,
           recurring: addRecurring.checked,
-        });
+        };
+        var addedList = loadAddedTransactions();
+        addedList.unshift(newTx);
+        saveAddedTransactions(addedList);
+        rebuildAllFromCache();
 
         currentPage = 1;
         applyFilters();
         closeAddModal();
+      });
+    }
+
+    if (tbody) {
+      tbody.addEventListener("click", function (e) {
+        var tr = e.target.closest("tr.tx-table-row--interactive");
+        if (!tr || !tbody.contains(tr)) return;
+        var tid = tr.dataset.txId;
+        if (!tid) return;
+        var txRow = findTxById(tid);
+        if (txRow) openEditModal(txRow);
+      });
+
+      tbody.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        var tr = e.target.closest("tr.tx-table-row--interactive");
+        if (!tr || !tbody.contains(tr)) return;
+        if (e.key === " ") e.preventDefault();
+        var tid = tr.dataset.txId;
+        if (!tid) return;
+        var txRow = findTxById(tid);
+        if (txRow) openEditModal(txRow);
+      });
+    }
+
+    if (editCloseBtn) {
+      editCloseBtn.addEventListener("click", closeEditModal);
+    }
+    if (editDialog) {
+      editDialog.addEventListener("click", function (e) {
+        if (e.target === editDialog) closeEditModal();
+      });
+    }
+
+    if (editForm && editDialog) {
+      editForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        clearEditErrors();
+        var tid = editId ? editId.value : "";
+        if (!tid) return;
+
+        var nameVal = editName ? editName.value.trim() : "";
+        var ok = true;
+        if (!nameVal) {
+          if (editNameErr) {
+            editNameErr.textContent = "Enter a name.";
+            editNameErr.hidden = false;
+          }
+          if (editName) editName.setAttribute("aria-invalid", "true");
+          ok = false;
+        } else if (nameVal.length > NAME_MAX) {
+          if (editNameErr) {
+            editNameErr.textContent =
+              "Name must be " + NAME_MAX + " characters or fewer.";
+            editNameErr.hidden = false;
+          }
+          if (editName) editName.setAttribute("aria-invalid", "true");
+          ok = false;
+        }
+
+        if (!editDate || !editDate.value) {
+          if (editDateErr) {
+            editDateErr.textContent = "Choose a transaction date.";
+            editDateErr.hidden = false;
+          }
+          if (editDate) editDate.setAttribute("aria-invalid", "true");
+          ok = false;
+        }
+
+        var amtRaw = editAmount ? editAmount.value.trim() : "";
+        var amtNum = amtRaw === "" ? NaN : Number(amtRaw);
+        if (amtRaw === "" || !Number.isFinite(amtNum)) {
+          if (editAmountErr) {
+            editAmountErr.textContent = "Enter a valid amount.";
+            editAmountErr.hidden = false;
+          }
+          if (editAmount) editAmount.setAttribute("aria-invalid", "true");
+          ok = false;
+        }
+
+        if (!ok) return;
+
+        var catVal = editCategory ? editCategory.value : "General";
+        var isoDate = dateInputToISO(editDate.value);
+
+        var ov = loadOverrides();
+        ov[tid] = {
+          name: nameVal,
+          category: catVal,
+          date: isoDate,
+          amount: amtNum,
+        };
+        saveOverrides(ov);
+        rebuildAllFromCache();
+        applyFilters();
+        closeEditModal();
+      });
+    }
+
+    if (editRemoveBtn) {
+      editRemoveBtn.addEventListener("click", function () {
+        var tid = editId ? editId.value : "";
+        if (!tid) return;
+        var txRow = findTxById(tid);
+        var label = txRow ? txRow.name : "";
+        openDeleteConfirm(tid, label || "Transaction");
+      });
+    }
+
+    if (deleteYesBtn) {
+      deleteYesBtn.addEventListener("click", confirmDeleteTransaction);
+    }
+    if (deleteNoBtn) {
+      deleteNoBtn.addEventListener("click", closeDeleteModal);
+    }
+    if (deleteCloseBtn) {
+      deleteCloseBtn.addEventListener("click", closeDeleteModal);
+    }
+    if (deleteDialog) {
+      deleteDialog.addEventListener("click", function (e) {
+        if (e.target === deleteDialog) closeDeleteModal();
+      });
+      deleteDialog.addEventListener("close", function () {
+        pendingDeleteTxId = null;
       });
     }
 
@@ -719,7 +1091,8 @@
         return res.json();
       })
       .then(function (data) {
-        allTransactions = data.transactions || [];
+        jsonTransactionsCache = data.transactions || [];
+        rebuildAllFromCache();
         applyFilters();
         main.removeAttribute("aria-busy");
       })
