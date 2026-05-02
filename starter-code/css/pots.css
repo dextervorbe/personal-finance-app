@@ -1,0 +1,317 @@
+/* Pots page */
+
+.pots-page {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 70rem;
+  margin-inline: auto;
+}
+
+.pots-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.pots-page__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 4vw, 2rem);
+  font-weight: 700;
+  color: var(--color-heading);
+  letter-spacing: -0.02em;
+}
+
+.pots-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 48rem) {
+  .pots-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pot-card {
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-divider);
+}
+
+.pot-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.pot-card__dot {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+}
+
+.pot-card__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.pot-card__menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.pot-card__menu-wrap.is-open {
+  z-index: 30;
+}
+
+.pot-card__menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem;
+  margin: -0.35rem;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: background-color 0.15s ease;
+}
+
+.pot-card__menu:hover {
+  background-color: var(--color-subtle-fill);
+}
+
+.pot-card__menu:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 2px;
+}
+
+[data-theme="dark"] .pot-card__menu img {
+  filter: brightness(0) saturate(0) invert(0.85);
+}
+
+.pot-card__dropdown {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  z-index: 10;
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-divider);
+  background-color: var(--color-card);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.35);
+}
+
+.pot-card__dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-heading);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pot-card__dropdown-item:hover {
+  background-color: var(--color-subtle-fill);
+}
+
+.pot-card__dropdown-item:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: -2px;
+}
+
+.pot-card__dropdown-item--danger {
+  color: #c94736;
+}
+
+.pot-card__dropdown-sep {
+  height: 1px;
+  margin: 0.35rem 0;
+  background-color: var(--color-divider);
+  border: 0;
+}
+
+.pot-card__saved-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pot-card__saved-label {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.pot-card__saved-value {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  letter-spacing: -0.02em;
+}
+
+.pot-card__progress {
+  height: 0.5rem;
+  margin-bottom: 0.75rem;
+  border-radius: 999px;
+  background-color: var(--color-body-bg);
+  overflow: hidden;
+}
+
+.pot-card__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.pot-card__meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.pot-card__pct {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.pot-card__target {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.pot-card__target strong {
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.pot-card__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.pot-card__btn {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-divider);
+  border-radius: 0.5rem;
+  background-color: transparent;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.pot-card__btn:hover {
+  background-color: var(--color-subtle-fill);
+  border-color: var(--color-text-muted);
+}
+
+.pot-card__btn:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 2px;
+}
+
+.pots-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.pots-error {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-error-bg);
+  color: var(--color-heading);
+  font-size: 0.875rem;
+}
+
+/* Pot name field + counter */
+.pot-name-field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pot-name-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-divider);
+  border-radius: 0.5rem;
+  background-color: var(--color-body-bg);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.pot-name-input:focus {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 2px;
+}
+
+.pot-name-count {
+  align-self: flex-end;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+/* Add / withdraw modal preview lines */
+.pot-modal-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-subtle-fill);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.pot-modal-preview strong {
+  color: var(--color-heading);
+}
+
+.pot-modal-preview-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}

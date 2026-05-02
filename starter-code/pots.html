@@ -11,6 +11,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/sidebar.css">
+  <link rel="stylesheet" href="./css/transactions.css">
+  <link rel="stylesheet" href="./css/budgets.css">
+  <link rel="stylesheet" href="./css/pots.css">
 
   <title>Frontend Mentor | Personal finance app - Pots</title>
 </head>
@@ -90,89 +93,244 @@
   </aside>
 
   <div class="app-shell">
-    <main id="main-content">
-      Pots
+    <main id="main-content" class="pots-page" aria-busy="true">
+      <header class="pots-page__header">
+        <h1 class="pots-page__title">Pots</h1>
+        <button type="button" class="transactions-add-btn" id="pot-add-open">+ Add New Pot</button>
+      </header>
 
-      Add New Pot
-
-      <!-- Add pots data -->
-
-      <!-- Add/Edit pot start -->
-
-      Add New Pot
-      Create a pot to set savings targets. These can help keep you on track as you save for special purchases.
-
-      Edit Pot
-      If your saving targets change, feel free to update your pots.
-
-      Pot Name
-
-      Target
-
-      Theme
-      Green
-      Yellow
-      Cyan
-      Navy
-      Red
-      Purple
-      Turquoise
-      Brown
-      Magenta
-      Blue
-      Navy Grey
-      Army Green
-      Pink
-      Gold
-      Orange
-
-      Add Pot / Save Changes
-
-      <!-- Add/Edit budget end -->
-
-      <!-- Delete pot start -->
-
-      Delete '<!-- Pot name -->'
-
-      Are you sure you want to delete this pot? This action cannot be reversed, and all the data inside it will be removed forever.
-
-      Yes, Confirm Deletion
-      No, Go Back
-
-      <!-- Delete pot end -->
-
-      <!-- Add to pot start -->
-
-      Add to '<!-- Pot name -->'
-
-      Add money to your pot to keep it separate from your main balance. As soon as you add this money, it will be deducted from your current balance.
-
-      New Amount
-      Target of <!-- pot target -->
-
-      Amount to Add
-
-      Confirm Addition
-
-      <!-- Add to pot end -->
-
-      <!-- Withdraw from pot start -->
-
-      Withdraw from '<!-- pot name -->'
-
-      Withdraw from your pot to put money back in your main balance. This will reduce the amount you have in this pot.
-
-      New Amount
-      Target of <!-- pot target -->
-
-      Amount to Withdraw
-
-      Confirm Withdrawal
-
+      <div id="pots-grid-root" class="pots-grid" aria-live="polite"></div>
     </main>
   </div>
 
+  <dialog class="tx-modal" id="pot-add-dialog" aria-labelledby="pot-add-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="pot-add-title" class="tx-modal__title">Add New Pot</h2>
+          <p class="tx-modal__desc">
+            Create a pot to set savings targets. These can help keep you on track as you save for special purchases.
+          </p>
+        </div>
+        <button type="button" class="tx-modal__close" id="pot-add-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+
+      <form class="tx-modal__form" id="pot-add-form" novalidate>
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="pot-add-name">Pot Name</label>
+          <div class="pot-name-field-wrap">
+            <input
+              type="text"
+              id="pot-add-name"
+              class="pot-name-input"
+              maxlength="30"
+              autocomplete="off"
+              aria-describedby="pot-add-name-err pot-add-name-count"
+            >
+            <span id="pot-add-name-count" class="pot-name-count" aria-live="polite">30 of 30 characters left</span>
+          </div>
+          <span id="pot-add-name-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="pot-add-target">Target</label>
+          <div class="budget-max-input">
+            <span class="budget-max-input__prefix" aria-hidden="true">$</span>
+            <input
+              type="number"
+              id="pot-add-target"
+              class="budget-max-input__control"
+              inputmode="decimal"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              aria-describedby="pot-add-target-err"
+            >
+          </div>
+          <span id="pot-add-target-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="pot-add-theme">Theme</label>
+          <div class="budget-theme-row">
+            <span id="pot-add-theme-swatch" class="budget-theme-swatch" aria-hidden="true"></span>
+            <select id="pot-add-theme" class="transactions-select tx-modal__select-full"></select>
+          </div>
+        </div>
+
+        <button type="submit" class="tx-modal__submit">Add Pot</button>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="tx-modal" id="pot-edit-dialog" aria-labelledby="pot-edit-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="pot-edit-title" class="tx-modal__title">Edit Pot</h2>
+          <p class="tx-modal__desc">
+            If your saving targets change, feel free to update your pots.
+          </p>
+        </div>
+        <button type="button" class="tx-modal__close" id="pot-edit-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+
+      <form class="tx-modal__form" id="pot-edit-form" novalidate>
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="pot-edit-name">Pot Name</label>
+          <div class="pot-name-field-wrap">
+            <input
+              type="text"
+              id="pot-edit-name"
+              class="pot-name-input"
+              maxlength="30"
+              autocomplete="off"
+              aria-describedby="pot-edit-name-err pot-edit-name-count"
+            >
+            <span id="pot-edit-name-count" class="pot-name-count" aria-live="polite">30 of 30 characters left</span>
+          </div>
+          <span id="pot-edit-name-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="pot-edit-target">Target</label>
+          <div class="budget-max-input">
+            <span class="budget-max-input__prefix" aria-hidden="true">$</span>
+            <input
+              type="number"
+              id="pot-edit-target"
+              class="budget-max-input__control"
+              inputmode="decimal"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              aria-describedby="pot-edit-target-err"
+            >
+          </div>
+          <span id="pot-edit-target-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="pot-edit-theme">Theme</label>
+          <div class="budget-theme-row">
+            <span id="pot-edit-theme-swatch" class="budget-theme-swatch" aria-hidden="true"></span>
+            <select id="pot-edit-theme" class="transactions-select tx-modal__select-full"></select>
+          </div>
+        </div>
+
+        <button type="submit" class="tx-modal__submit">Save Changes</button>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="tx-modal" id="pot-delete-dialog" aria-labelledby="pot-delete-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="pot-delete-title" class="tx-modal__title">Delete pot</h2>
+          <p id="pot-delete-lede" class="tx-modal__desc"></p>
+        </div>
+        <button type="button" class="tx-modal__close" id="pot-delete-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+      <div class="budget-delete-actions">
+        <button type="button" class="budget-delete-btn budget-delete-btn--danger" id="pot-delete-yes">
+          Yes, Confirm Deletion
+        </button>
+        <button type="button" class="budget-delete-btn budget-delete-btn--ghost" id="pot-delete-no">
+          No, Go Back
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="tx-modal" id="pot-add-money-dialog" aria-labelledby="pot-add-money-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="pot-add-money-title" class="tx-modal__title">Add to pot</h2>
+          <p class="tx-modal__desc">
+            Add money to your pot to keep it separate from your main balance. As soon as you add this money, it will be deducted from your current balance.
+          </p>
+        </div>
+        <button type="button" class="tx-modal__close" id="pot-add-money-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+
+      <form class="tx-modal__form" id="pot-add-money-form" novalidate>
+        <div class="pot-modal-preview" id="pot-add-money-preview" aria-live="polite"></div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="pot-add-money-amount">Amount to Add</label>
+          <div class="budget-max-input">
+            <span class="budget-max-input__prefix" aria-hidden="true">$</span>
+            <input
+              type="number"
+              id="pot-add-money-amount"
+              class="budget-max-input__control"
+              inputmode="decimal"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              aria-describedby="pot-add-money-err"
+            >
+          </div>
+          <span id="pot-add-money-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <button type="submit" class="tx-modal__submit">Confirm Addition</button>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="tx-modal" id="pot-withdraw-dialog" aria-labelledby="pot-withdraw-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="pot-withdraw-title" class="tx-modal__title">Withdraw from pot</h2>
+          <p class="tx-modal__desc">
+            Withdraw from your pot to put money back in your main balance. This will reduce the amount you have in this pot.
+          </p>
+        </div>
+        <button type="button" class="tx-modal__close" id="pot-withdraw-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+
+      <form class="tx-modal__form" id="pot-withdraw-form" novalidate>
+        <div class="pot-modal-preview" id="pot-withdraw-preview" aria-live="polite"></div>
+
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="pot-withdraw-amount">Amount to Withdraw</label>
+          <div class="budget-max-input">
+            <span class="budget-max-input__prefix" aria-hidden="true">$</span>
+            <input
+              type="number"
+              id="pot-withdraw-amount"
+              class="budget-max-input__control"
+              inputmode="decimal"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              aria-describedby="pot-withdraw-err"
+            >
+          </div>
+          <span id="pot-withdraw-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+
+        <button type="submit" class="tx-modal__submit">Confirm Withdrawal</button>
+      </form>
+    </div>
+  </dialog>
+
   <script src="./js/theme.js" defer></script>
   <script src="./js/sidebar.js" defer></script>
+  <script src="./js/pots.js" defer></script>
 </body>
 </html>
