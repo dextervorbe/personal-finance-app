@@ -96,6 +96,38 @@
     <main id="main-content" class="budgets-page" aria-busy="true">
       <header class="budgets-page__header">
         <h1 class="budgets-page__title">Budgets</h1>
+        <div class="budgets-page__header-mid">
+          <div class="budgets-month-nav" id="budget-month-nav">
+            <div class="budgets-month-nav__year-wrap" aria-hidden="true">
+              <span class="budgets-month-nav__year-rule"></span>
+              <span class="budgets-month-nav__year" id="budget-month-year"></span>
+              <span class="budgets-month-nav__year-rule"></span>
+            </div>
+            <div class="budgets-month-nav__strip" role="group" aria-label="Budget month">
+              <button type="button" class="budgets-month-card" id="budget-month-prev">
+                <span class="budgets-month-card__chart">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card" id="budget-month-current">
+                <span class="budgets-month-card__chart">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card" id="budget-month-next">
+                <span class="budgets-month-card__chart">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+            </div>
+          </div>
+        </div>
         <button type="button" class="transactions-add-btn" id="budget-add-open">+ Add New Budget</button>
       </header>
 

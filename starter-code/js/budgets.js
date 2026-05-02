@@ -1,4 +1,19 @@
 (function () {
+  var MONTH_SHORT = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
   var CATEGORY_OPTIONS = [
     "Entertainment",
     "Bills",
@@ -46,8 +61,9 @@
     return new Date(iso);
   }
 
-  function isAugust2024(d) {
-    return d.getUTCFullYear() === 2024 && d.getUTCMonth() === 7;
+  function addCalendarMonths(year, monthIndex, delta) {
+    var d = new Date(Date.UTC(year, monthIndex + delta, 1));
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth() };
   }
 
   function initials(name) {
@@ -57,12 +73,25 @@
     return (a + b).toUpperCase() || "?";
   }
 
-  function spentInAugust(transactions, category) {
+  function spentInMonth(transactions, category, year, monthIndex) {
     var sum = 0;
     for (var i = 0; i < transactions.length; i++) {
       var t = transactions[i];
-      if (!isAugust2024(parseISO(t.date))) continue;
+      var d = parseISO(t.date);
+      if (d.getUTCFullYear() !== year || d.getUTCMonth() !== monthIndex) continue;
       if (t.category !== category) continue;
+      if (t.amount >= 0) continue;
+      sum += Math.abs(t.amount);
+    }
+    return sum;
+  }
+
+  function totalExpenseInMonth(transactions, year, monthIndex) {
+    var sum = 0;
+    for (var i = 0; i < transactions.length; i++) {
+      var t = transactions[i];
+      var d = parseISO(t.date);
+      if (d.getUTCFullYear() !== year || d.getUTCMonth() !== monthIndex) continue;
       if (t.amount >= 0) continue;
       sum += Math.abs(t.amount);
     }
@@ -125,6 +154,11 @@
     var legendEl = document.getElementById("budgets-page-legend");
     var cardsRoot = document.getElementById("budgets-cards-root");
 
+    var budgetMonthYear = document.getElementById("budget-month-year");
+    var budgetMonthPrev = document.getElementById("budget-month-prev");
+    var budgetMonthCurrent = document.getElementById("budget-month-current");
+    var budgetMonthNext = document.getElementById("budget-month-next");
+
     var addBtn = document.getElementById("budget-add-open");
     var addDialog = document.getElementById("budget-add-dialog");
     var addForm = document.getElementById("budget-add-form");
@@ -157,6 +191,74 @@
     var budgetsState = [];
     var pendingDeleteIndex = null;
     var pendingEditIndex = null;
+
+    var viewYear = 2024;
+    var viewMonth = 7;
+
+    var monthAriaFmt = new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+
+    function sumBudgetMaximums() {
+      var s = 0;
+      for (var i = 0; i < budgetsState.length; i++) {
+        s += budgetsState[i].maximum;
+      }
+      return s;
+    }
+
+    function updateMonthCard(btn, y, m, isActive) {
+      if (!btn) return;
+      var cap = sumBudgetMaximums();
+      var exp = totalExpenseInMonth(transactions, y, m);
+      btn.classList.toggle("budgets-month-card--active", isActive);
+      btn.classList.toggle("budgets-month-card--empty", cap <= 0);
+
+      var label = btn.querySelector(".budgets-month-card__label");
+      if (label) label.textContent = MONTH_SHORT[m];
+
+      var ariaBase = monthAriaFmt.format(new Date(Date.UTC(y, m, 1)));
+      btn.setAttribute(
+        "aria-label",
+        isActive
+          ? ariaBase + ", selected"
+          : "Show budgets for " + ariaBase
+      );
+      if (isActive) {
+        btn.setAttribute("aria-current", "date");
+      } else {
+        btn.removeAttribute("aria-current");
+      }
+
+      var barA = btn.querySelector(".budgets-month-card__bar--solid");
+      var barB = btn.querySelector(".budgets-month-card__bar--soft");
+      if (cap <= 0) {
+        if (barA) barA.style.removeProperty("height");
+        if (barB) barB.style.removeProperty("height");
+        return;
+      }
+      var pct = Math.min(exp / cap, 1);
+      var hSolid = Math.max(pct * 100, 3);
+      var hSoft = Math.max((1 - pct) * 100, 3);
+      if (barA) barA.style.height = hSolid + "%";
+      if (barB) barB.style.height = hSoft + "%";
+    }
+
+    function renderMonthNav() {
+      if (!budgetMonthYear || !budgetMonthPrev || !budgetMonthCurrent || !budgetMonthNext)
+        return;
+
+      budgetMonthYear.textContent = String(viewYear);
+
+      var prev = addCalendarMonths(viewYear, viewMonth, -1);
+      var next = addCalendarMonths(viewYear, viewMonth, 1);
+
+      updateMonthCard(budgetMonthPrev, prev.y, prev.m, false);
+      updateMonthCard(budgetMonthCurrent, viewYear, viewMonth, true);
+      updateMonthCard(budgetMonthNext, next.y, next.m, false);
+    }
 
     function closeAllBudgetMenus() {
       var wraps = document.querySelectorAll(".budget-card__menu-wrap");
@@ -397,7 +499,9 @@
       for (var bi = 0; bi < budgetsState.length; bi++) {
         var b = budgetsState[bi];
         themes.push(b.theme);
-        spents.push(spentInAugust(transactions, b.category));
+        spents.push(
+          spentInMonth(transactions, b.category, viewYear, viewMonth)
+        );
         budgetLimit += b.maximum;
       }
       var totalSpentBudget = 0;
@@ -458,7 +562,12 @@
 
       for (var i = 0; i < budgetsState.length; i++) {
         var b = budgetsState[i];
-        var spent = spentInAugust(transactions, b.category);
+        var spent = spentInMonth(
+          transactions,
+          b.category,
+          viewYear,
+          viewMonth
+        );
         var remaining = b.maximum - spent;
         var pct = b.maximum > 0 ? Math.min((spent / b.maximum) * 100, 100) : 0;
         var latest = latestForCategory(transactions, b.category, 3);
@@ -703,10 +812,27 @@
     }
 
     function renderAll() {
+      renderMonthNav();
       renderDonutAndLegend();
       renderCards();
     }
 
+    if (budgetMonthPrev) {
+      budgetMonthPrev.addEventListener("click", function () {
+        var p = addCalendarMonths(viewYear, viewMonth, -1);
+        viewYear = p.y;
+        viewMonth = p.m;
+        renderAll();
+      });
+    }
+    if (budgetMonthNext) {
+      budgetMonthNext.addEventListener("click", function () {
+        var n = addCalendarMonths(viewYear, viewMonth, 1);
+        viewYear = n.y;
+        viewMonth = n.m;
+        renderAll();
+      });
+    }
     if (themeSelect) {
       themeSelect.addEventListener("change", syncThemeSwatch);
     }

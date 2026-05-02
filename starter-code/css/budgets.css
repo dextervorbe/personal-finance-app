@@ -16,12 +16,191 @@
   margin-bottom: 1.5rem;
 }
 
+.budgets-page__header-mid {
+  flex: 1 1 14rem;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  order: 2;
+}
+
 .budgets-page__title {
   margin: 0;
   font-size: clamp(1.75rem, 4vw, 2rem);
   font-weight: 700;
   color: var(--color-heading);
   letter-spacing: -0.02em;
+  order: 1;
+}
+
+.budgets-page__header .transactions-add-btn {
+  order: 3;
+}
+
+@media (max-width: 52rem) {
+  .budgets-page__header-mid {
+    flex: 1 1 100%;
+    order: 4;
+  }
+
+  .budgets-page__header .transactions-add-btn {
+    margin-inline-start: auto;
+  }
+}
+
+.budgets-month-nav {
+  display: flex;
+  align-items: stretch;
+  gap: 0.625rem;
+  max-width: 26rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-divider);
+  box-shadow: 0 2px 12px rgb(32 31 36 / 0.06);
+}
+
+[data-theme="dark"] .budgets-month-nav {
+  box-shadow: 0 4px 24px rgb(0 0 0 / 0.5);
+}
+
+.budgets-month-nav__year-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0 0.25rem;
+  flex-shrink: 0;
+}
+
+.budgets-month-nav__year-rule {
+  width: 1px;
+  flex: 1;
+  min-height: 0.5rem;
+  max-height: 1.25rem;
+  background-color: var(--color-divider);
+}
+
+.budgets-month-nav__year {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  letter-spacing: 0.08em;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  text-orientation: mixed;
+}
+
+.budgets-month-nav__strip {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.budgets-month-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.5rem 0.375rem 0.5rem;
+  border: 1px solid var(--color-divider);
+  border-radius: 0.5rem;
+  background-color: var(--color-subtle-fill);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.budgets-month-card:hover {
+  border-color: var(--color-text-muted);
+}
+
+[data-theme="light"] .budgets-month-card:hover {
+  background-color: rgb(32 31 36 / 0.04);
+}
+
+[data-theme="dark"] .budgets-month-card:hover {
+  background-color: rgb(255 255 255 / 0.06);
+}
+
+.budgets-month-card:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 2px;
+}
+
+.budgets-month-card--active {
+  border-width: 2px;
+  border-color: var(--color-accent-green);
+  background-color: rgb(39 124 120 / 0.12);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .budgets-month-card--active {
+  background-color: rgb(39 124 120 / 0.18);
+}
+
+.budgets-month-card__chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.25rem;
+  height: 2.25rem;
+  width: 100%;
+  margin-bottom: 0.45rem;
+}
+
+.budgets-month-card__bar {
+  width: 0.45rem;
+  border-radius: 0.15rem 0.15rem 0 0;
+  min-height: 3px;
+  transition: height 0.25s ease;
+}
+
+.budgets-month-card__bar--solid {
+  background-color: var(--color-accent-green);
+}
+
+.budgets-month-card__bar--soft {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--color-accent-green),
+    var(--color-accent-green) 2px,
+    rgb(39 124 120 / 0.28) 2px,
+    rgb(39 124 120 / 0.28) 4px
+  );
+}
+
+.budgets-month-card--empty .budgets-month-card__chart {
+  align-items: center;
+  justify-content: center;
+}
+
+.budgets-month-card--empty .budgets-month-card__bar--solid,
+.budgets-month-card--empty .budgets-month-card__bar--soft {
+  height: 3px !important;
+  width: 40%;
+  border-radius: 999px;
+  background: var(--color-text-muted);
+  opacity: 0.55;
+}
+
+.budgets-month-card--empty .budgets-month-card__bar--soft {
+  display: none;
+}
+
+.budgets-month-card__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  letter-spacing: 0.02em;
 }
 
 .budgets-layout {
