@@ -764,10 +764,10 @@
             theme: p.theme,
           };
         });
-        currentBalance =
-          data.balance && typeof data.balance.current === "number"
-            ? data.balance.current
-            : 0;
+        currentBalance = ledgerBalanceFromTransactions(
+          data.transactions || [],
+          data.openingBalance
+        );
         populateThemeSelect(addTheme, addThemeSwatch, null);
         populateThemeSelect(editTheme, editThemeSwatch, THEME_PRESETS[0].hex);
         syncAddThemeSwatch();

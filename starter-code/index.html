@@ -189,11 +189,13 @@
           </article>
           <article class="summary-card summary-card--income">
             <h3 class="summary-card__label">Income</h3>
-            <p class="summary-card__value" id="overview-income">—</p>
+            <p class="summary-card__scope" id="overview-income-scope"></p>
+            <p class="summary-card__value" id="overview-income" aria-describedby="overview-income-scope">—</p>
           </article>
           <article class="summary-card summary-card--expenses">
-            <h3 class="summary-card__label">Expenses</h3>
-            <p class="summary-card__value" id="overview-expenses">—</p>
+            <h3 class="summary-card__label">Spending</h3>
+            <p class="summary-card__scope" id="overview-expenses-scope"></p>
+            <p class="summary-card__value" id="overview-expenses" aria-describedby="overview-expenses-scope">—</p>
           </article>
         </div>
       </section>
@@ -302,6 +304,7 @@
   <script src="./js/theme.js" defer></script>
   <script src="./js/sidebar.js" defer></script>
   <script src="./js/budget-year-picker.js" defer></script>
+  <script src="./js/ledger-balance.js" defer></script>
   <script src="./js/overview.js" defer></script>
 </body>
 </html>

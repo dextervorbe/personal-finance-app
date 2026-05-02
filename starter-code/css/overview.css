@@ -81,14 +81,28 @@
 }
 
 .summary-card__label {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.35rem;
   font-size: 0.875rem;
   font-weight: 400;
   opacity: 0.85;
 }
 
+.summary-card__scope {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--color-text-muted);
+}
+
 .summary-card--balance .summary-card__label {
+  margin-bottom: 0.75rem;
   opacity: 0.7;
+}
+
+.summary-card--income .summary-card__label,
+.summary-card--expenses .summary-card__label {
+  margin-bottom: 0.25rem;
 }
 
 [data-theme="dark"] .summary-card--balance {

@@ -782,16 +782,28 @@
     function renderOverviewContent() {
       if (!overviewData) return;
 
-      var balance = overviewData.balance;
-      document.getElementById("overview-balance").textContent =
-        currency.format(balance.current);
-
       var transactions = overviewData.transactions || [];
+      var ledgerBalance = ledgerBalanceFromTransactions(
+        transactions,
+        overviewData.openingBalance
+      );
+      document.getElementById("overview-balance").textContent =
+        currency.format(ledgerBalance);
+
       document.getElementById("overview-income").textContent = currency.format(
         incomeInMonth(transactions, viewYear, viewMonth)
       );
       document.getElementById("overview-expenses").textContent =
         currency.format(expensesInMonth(transactions, viewYear, viewMonth));
+
+      var periodHuman = monthAriaFmt.format(
+        new Date(Date.UTC(viewYear, viewMonth, 1))
+      );
+      var scopeLine = "For " + periodHuman;
+      var incomeScopeEl = document.getElementById("overview-income-scope");
+      var expensesScopeEl = document.getElementById("overview-expenses-scope");
+      if (incomeScopeEl) incomeScopeEl.textContent = scopeLine;
+      if (expensesScopeEl) expensesScopeEl.textContent = scopeLine;
 
       var pots = overviewData.pots || [];
       var potsSaved = 0;
