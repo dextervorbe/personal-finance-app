@@ -51,10 +51,10 @@
 .budgets-month-nav {
   display: flex;
   align-items: stretch;
-  gap: 0.5rem;
-  width: 100%;
-  max-width: min(100%, 38rem);
-  padding: 0.5rem 0.625rem;
+  gap: 0.625rem;
+  width: fit-content;
+  max-width: min(100%, 28rem);
+  padding: 0.625rem 0.75rem;
   border-radius: 0.75rem;
   background-color: var(--color-card);
   border: 1px solid var(--color-divider);
@@ -96,8 +96,9 @@
 .budgets-month-nav__strip {
   display: flex;
   align-items: stretch;
-  gap: 0.35rem;
-  flex: 1;
+  justify-content: center;
+  gap: 0.5rem;
+  flex: 0 1 auto;
   min-width: 0;
   overflow-x: auto;
   overscroll-behavior-x: contain;
@@ -114,15 +115,35 @@
   border-radius: 999px;
 }
 
+/*
+  Month strip always has 7 buttons in the DOM (offsets −3…+3 from the selected month).
+  On smaller viewports we hide the outer slots so fewer months appear; the center month
+  stays aligned with the selected budget month (still slot index 3).
+*/
+@media (max-width: 56rem) {
+  #budget-month-strip > .budgets-month-card:first-child,
+  #budget-month-strip > .budgets-month-card:last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 42rem) {
+  #budget-month-strip > .budgets-month-card:nth-child(2),
+  #budget-month-strip > .budgets-month-card:nth-child(6) {
+    display: none;
+  }
+}
+
 .budgets-month-card {
-  flex: 1 1 2.25rem;
-  min-width: 2.35rem;
-  max-width: 4.5rem;
+  flex: 0 0 2.75rem;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding: 0.4rem 0.25rem 0.45rem;
+  padding: 0.5rem 0.25rem 0.5rem;
   border: 1px solid var(--color-divider);
   border-radius: 0.5rem;
   background-color: var(--color-subtle-fill);
@@ -166,14 +187,14 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 0.2rem;
-  height: 2rem;
+  gap: 0.25rem;
+  height: 2.25rem;
   width: 100%;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.45rem;
 }
 
 .budgets-month-card__bar {
-  width: 0.38rem;
+  width: 0.45rem;
   border-radius: 0.15rem 0.15rem 0 0;
   min-height: 3px;
   transition: height 0.25s ease;
@@ -212,7 +233,7 @@
 }
 
 .budgets-month-card__label {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--color-heading);
   letter-spacing: 0.02em;
