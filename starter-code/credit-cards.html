@@ -176,6 +176,23 @@
       <section class="transactions-panel" aria-labelledby="cc-heading">
         <h2 id="cc-heading" class="visually-hidden">Credit card transactions</h2>
 
+        <div class="cc-account-summary" id="cc-account-summary">
+          <div class="cc-account-carousel" id="cc-account-carousel" hidden>
+            <button type="button" class="cc-account-carousel__nav" id="cc-card-prev" aria-label="Previous credit card">
+              <img src="./assets/images/icon-caret-left.svg" alt="" width="8" height="14">
+            </button>
+            <div class="cc-account-cards" id="cc-account-cards" aria-label="Credit cards"></div>
+            <button type="button" class="cc-account-carousel__nav" id="cc-card-next" aria-label="Next credit card">
+              <img src="./assets/images/icon-caret-right.svg" alt="" width="8" height="14">
+            </button>
+          </div>
+          <p class="cc-account-carousel__meta" id="cc-card-carousel-meta" hidden aria-live="polite"></p>
+          <div class="cc-account-empty" id="cc-account-empty" hidden>
+            <p class="cc-account-empty__text">No credit card on file. Add one to track spending against your borrowed amount.</p>
+            <button type="button" class="cc-account-empty__btn" id="cc-account-add-btn">Add credit card</button>
+          </div>
+        </div>
+
         <div class="transactions-toolbar">
           <div class="transactions-search">
             <label class="visually-hidden" for="cc-search">Search credit card transactions</label>
@@ -400,6 +417,80 @@
       <div class="tx-edit-dialog__danger-wrap">
         <button type="button" class="tx-edit-dialog__remove" id="cc-edit-remove">
           Remove transaction
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="tx-modal" id="cc-card-actions-dialog" aria-labelledby="cc-card-actions-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="cc-card-actions-title" class="tx-modal__title">Credit card</h2>
+          <p id="cc-card-actions-desc" class="tx-modal__desc">Manage this card or add another one.</p>
+        </div>
+        <button type="button" class="tx-modal__close" id="cc-card-actions-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+      <div class="cc-card-actions__buttons">
+        <button type="button" class="tx-modal__submit" id="cc-actions-manage">Manage this card</button>
+        <button type="button" class="cc-card-actions__add" id="cc-actions-add-card">Add new card</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="tx-modal" id="cc-manage-card-dialog" aria-labelledby="cc-manage-card-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="cc-manage-card-title" class="tx-modal__title">Credit card</h2>
+          <p class="tx-modal__desc">Update the bank name or starting borrowed amount. Charges reduce this figure; credits (positive amounts) add back.</p>
+        </div>
+        <button type="button" class="tx-modal__close" id="cc-manage-card-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+
+      <form class="tx-modal__form" id="cc-manage-card-form" novalidate>
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="cc-manage-name">Bank name</label>
+          <input type="text" id="cc-manage-name" class="tx-modal__input" maxlength="30" autocomplete="organization" spellcheck="false" aria-describedby="cc-manage-name-err">
+          <span id="cc-manage-name-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+        <div class="tx-modal__field">
+          <label class="tx-modal__label" for="cc-manage-borrowed">Borrowed amount</label>
+          <input type="number" id="cc-manage-borrowed" class="tx-modal__input" inputmode="decimal" step="any" placeholder="1000.00" aria-describedby="cc-manage-borrowed-err">
+          <span id="cc-manage-borrowed-err" class="tx-modal__error" role="alert" hidden></span>
+        </div>
+        <button type="submit" class="tx-modal__submit">Save</button>
+      </form>
+
+      <div class="tx-edit-dialog__danger-wrap">
+        <button type="button" class="tx-edit-dialog__remove" id="cc-open-delete-card">
+          Delete card
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="tx-modal" id="cc-delete-card-dialog" aria-labelledby="cc-delete-card-title">
+    <div class="tx-modal__surface">
+      <header class="tx-modal__header">
+        <div class="tx-modal__heading-block">
+          <h2 id="cc-delete-card-title" class="tx-modal__title">Delete credit card</h2>
+          <p id="cc-delete-card-lede" class="tx-modal__desc"></p>
+        </div>
+        <button type="button" class="tx-modal__close" id="cc-delete-card-close" aria-label="Close">
+          <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
+        </button>
+      </header>
+      <div class="budget-delete-actions">
+        <button type="button" class="budget-delete-btn budget-delete-btn--danger" id="cc-delete-card-yes">
+          Yes, delete card
+        </button>
+        <button type="button" class="budget-delete-btn budget-delete-btn--ghost" id="cc-delete-card-no">
+          Cancel
         </button>
       </div>
     </div>

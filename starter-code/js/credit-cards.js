@@ -217,6 +217,162 @@
     }
   }
 
+  var PF_CC_ACCOUNT_KEY = "pf-cc-account";
+  var PF_CC_CARDS_KEY = "pf-cc-cards";
+  var PF_CC_ACTIVE_CARD_KEY = "pf-cc-active-card";
+  var PF_CC_SEED_CLEARED_KEY = "pf-cc-seed-cleared";
+  var DEFAULT_CARD_ID = "cc-card-default";
+
+  function isSeedCleared() {
+    try {
+      return localStorage.getItem(PF_CC_SEED_CLEARED_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setSeedCleared(on) {
+    try {
+      if (on) localStorage.setItem(PF_CC_SEED_CLEARED_KEY, "1");
+      else localStorage.removeItem(PF_CC_SEED_CLEARED_KEY);
+    } catch (e) {
+      /* quota / private mode */
+    }
+  }
+
+  function txEffectiveCardId(t) {
+    return t.cardId || DEFAULT_CARD_ID;
+  }
+
+  function loadCardsState() {
+    try {
+      var raw = localStorage.getItem(PF_CC_CARDS_KEY);
+      if (raw) {
+        var arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length > 0) {
+          var cardsOut = [];
+          for (var i = 0; i < arr.length; i++) {
+            var c = arr[i];
+            if (
+              c &&
+              typeof c.id === "string" &&
+              typeof c.name === "string" &&
+              Number.isFinite(Number(c.borrowedAmount))
+            ) {
+              cardsOut.push({
+                id: c.id,
+                name: c.name.trim() || "Card",
+                borrowedAmount: Number(c.borrowedAmount),
+              });
+            }
+          }
+          if (cardsOut.length > 0) {
+            var active = localStorage.getItem(PF_CC_ACTIVE_CARD_KEY);
+            if (
+              !active ||
+              !cardsOut.some(function (x) {
+                return x.id === active;
+              })
+            ) {
+              active = cardsOut[0].id;
+            }
+            return { cards: cardsOut, activeCardId: active };
+          }
+        }
+      }
+      var legacy = localStorage.getItem(PF_CC_ACCOUNT_KEY);
+      if (legacy) {
+        try {
+          var o = JSON.parse(legacy);
+          if (
+            o &&
+            typeof o.name === "string" &&
+            Number.isFinite(Number(o.borrowedAmount))
+          ) {
+            return {
+              cards: [
+                {
+                  id: DEFAULT_CARD_ID,
+                  name: o.name.trim() || "Card",
+                  borrowedAmount: Number(o.borrowedAmount),
+                },
+              ],
+              activeCardId: DEFAULT_CARD_ID,
+            };
+          }
+        } catch (e) {}
+      }
+    } catch (e2) {}
+    if (isSeedCleared()) {
+      return { cards: [], activeCardId: null };
+    }
+    return {
+      cards: [
+        {
+          id: DEFAULT_CARD_ID,
+          name: "Capital One",
+          borrowedAmount: 1000,
+        },
+      ],
+      activeCardId: DEFAULT_CARD_ID,
+    };
+  }
+
+  function saveCards(cardsArr) {
+    try {
+      localStorage.setItem(PF_CC_CARDS_KEY, JSON.stringify(cardsArr));
+    } catch (e) {
+      /* quota / private mode */
+    }
+  }
+
+  function saveActiveCardId(id) {
+    try {
+      if (id) localStorage.setItem(PF_CC_ACTIVE_CARD_KEY, id);
+      else localStorage.removeItem(PF_CC_ACTIVE_CARD_KEY);
+    } catch (e) {
+      /* quota / private mode */
+    }
+  }
+
+  function newCardId() {
+    return (
+      "cc-card-" +
+      Date.now().toString(36) +
+      "-" +
+      Math.random().toString(36).replace(/[^a-z0-9]/gi, "").slice(2, 10)
+    );
+  }
+
+  function sumAllTxAmounts(rows) {
+    var s = 0;
+    for (var i = 0; i < rows.length; i++) {
+      s += rows[i].amount;
+    }
+    return s;
+  }
+
+  function txsForCard(rows, cardId) {
+    if (!cardId) return [];
+    var out = [];
+    for (var i = 0; i < rows.length; i++) {
+      if (txEffectiveCardId(rows[i]) === cardId) out.push(rows[i]);
+    }
+    return out;
+  }
+
+  function filterRowsByCardId(rows, cardId) {
+    if (!cardId) return [];
+    return rows.filter(function (t) {
+      return txEffectiveCardId(t) === cardId;
+    });
+  }
+
+  function computeRunningBalance(card, rows) {
+    if (!card) return null;
+    return card.borrowedAmount + sumAllTxAmounts(txsForCard(rows, card.id));
+  }
+
   function newUserTxId() {
     return (
       "cc-u-" +
@@ -236,6 +392,7 @@
       amount: ov.amount !== undefined ? ov.amount : tx.amount,
       recurring: !!tx.recurring,
       __txId: tx.__txId,
+      cardId: tx.cardId,
     };
   }
 
@@ -250,7 +407,8 @@
     );
   }
 
-  function rebuildTransactionsFromStorage(jsonTransactions) {
+  function rebuildTransactionsFromStorage(jsonTransactions, seedCardId) {
+    var sid = seedCardId || DEFAULT_CARD_ID;
     var deleted = loadDeletedIds();
     var overrides = loadOverrides();
     var added = loadAddedTransactions();
@@ -266,6 +424,7 @@
           date: t.date,
           amount: t.amount,
           recurring: !!t.recurring,
+          cardId: sid,
           __txId: id,
         };
         return applyTxOverrides(tx, overrides[id]);
@@ -273,7 +432,9 @@
       .filter(Boolean);
 
     var addedPart = added.map(function (t) {
-      return applyTxOverrides(t, overrides[t.__txId]);
+      var base = applyTxOverrides(t, overrides[t.__txId]);
+      if (!base.cardId) base.cardId = sid;
+      return base;
     });
 
     return addedPart.concat(jsonPart);
@@ -533,6 +694,41 @@
     var monthNavYear = 2026;
     var monthNavMonth = 7;
 
+    var cards = [];
+    var activeCardId = null;
+    var pendingActionsCardId = null;
+    var isAddingCard = false;
+    var manageEditingCardId = null;
+
+    var manageCardDialog = document.getElementById("cc-manage-card-dialog");
+    var manageCardTitle = document.getElementById("cc-manage-card-title");
+    var manageCardClose = document.getElementById("cc-manage-card-close");
+    var manageCardForm = document.getElementById("cc-manage-card-form");
+    var manageName = document.getElementById("cc-manage-name");
+    var manageBorrowed = document.getElementById("cc-manage-borrowed");
+    var manageNameErr = document.getElementById("cc-manage-name-err");
+    var manageBorrowedErr = document.getElementById("cc-manage-borrowed-err");
+    var openDeleteCardBtn = document.getElementById("cc-open-delete-card");
+    var accountCarouselEl = document.getElementById("cc-account-carousel");
+    var accountCardsEl = document.getElementById("cc-account-cards");
+    var cardPrevBtn = document.getElementById("cc-card-prev");
+    var cardNextBtn = document.getElementById("cc-card-next");
+    var cardCarouselMeta = document.getElementById("cc-card-carousel-meta");
+    var accountEmptyEl = document.getElementById("cc-account-empty");
+    var accountAddBtn = document.getElementById("cc-account-add-btn");
+
+    var cardActionsDialog = document.getElementById("cc-card-actions-dialog");
+    var cardActionsClose = document.getElementById("cc-card-actions-close");
+    var cardActionsManage = document.getElementById("cc-actions-manage");
+    var cardActionsAddCard = document.getElementById("cc-actions-add-card");
+    var cardActionsDesc = document.getElementById("cc-card-actions-desc");
+
+    var deleteCardDialog = document.getElementById("cc-delete-card-dialog");
+    var deleteCardClose = document.getElementById("cc-delete-card-close");
+    var deleteCardYes = document.getElementById("cc-delete-card-yes");
+    var deleteCardNo = document.getElementById("cc-delete-card-no");
+    var deleteCardLede = document.getElementById("cc-delete-card-lede");
+
     var monthAriaFmt = new Intl.DateTimeFormat("en-US", {
       month: "long",
       year: "numeric",
@@ -564,7 +760,332 @@
     if (fromUrl) catEl.value = fromUrl;
 
     function rebuildAllFromCache() {
-      allTransactions = rebuildTransactionsFromStorage(jsonTransactionsCache);
+      var seedCardId =
+        cards.length > 0 ? cards[0].id : DEFAULT_CARD_ID;
+      allTransactions = rebuildTransactionsFromStorage(
+        jsonTransactionsCache,
+        seedCardId,
+      );
+    }
+
+    function wipeCreditCardAndTransactions() {
+      setSeedCleared(true);
+      try {
+        localStorage.removeItem(PF_CC_ACCOUNT_KEY);
+        localStorage.removeItem(PF_CC_CARDS_KEY);
+        localStorage.removeItem(PF_CC_ACTIVE_CARD_KEY);
+      } catch (e) {}
+      saveDeletedIds(new Set());
+      saveOverrides({});
+      saveAddedTransactions([]);
+      jsonTransactionsCache = [];
+      cards = [];
+      activeCardId = null;
+      rebuildAllFromCache();
+    }
+
+    function findCardById(id) {
+      for (var i = 0; i < cards.length; i++) {
+        if (cards[i].id === id) return cards[i];
+      }
+      return null;
+    }
+
+    function deleteCardById(cardId) {
+      if (!cardId) return;
+
+      var ownSeed =
+        cards.length > 0 && cards[0].id === cardId && jsonTransactionsCache.length > 0;
+
+      var added = loadAddedTransactions().filter(function (t) {
+        return txEffectiveCardId(t) !== cardId;
+      });
+      saveAddedTransactions(added);
+
+      if (ownSeed) {
+        var del = loadDeletedIds();
+        for (var i = 0; i < jsonTransactionsCache.length; i++) {
+          del.add("cc-b-" + i);
+        }
+        saveDeletedIds(del);
+      }
+
+      var nextCards = cards.filter(function (c) {
+        return c.id !== cardId;
+      });
+
+      if (nextCards.length === 0) {
+        wipeCreditCardAndTransactions();
+        return;
+      }
+
+      cards = nextCards;
+      saveCards(cards);
+
+      if (activeCardId === cardId) {
+        activeCardId = cards[0].id;
+        saveActiveCardId(activeCardId);
+      }
+
+      rebuildAllFromCache();
+    }
+
+    function syncActiveCardIndex() {
+      var idx = -1;
+      for (var i = 0; i < cards.length; i++) {
+        if (cards[i].id === activeCardId) {
+          idx = i;
+          break;
+        }
+      }
+      if (idx < 0 && cards.length > 0) {
+        activeCardId = cards[0].id;
+        saveActiveCardId(activeCardId);
+        idx = 0;
+      }
+      return idx;
+    }
+
+    function stepActiveCard(delta) {
+      if (!cards.length) return;
+      var idx = syncActiveCardIndex();
+      if (idx < 0) return;
+      var nextIdx = idx + delta;
+      if (nextIdx < 0 || nextIdx >= cards.length) return;
+      activeCardId = cards[nextIdx].id;
+      saveActiveCardId(activeCardId);
+      currentPage = 1;
+      applyFilters();
+    }
+
+    function renderAccountCards() {
+      if (!accountCardsEl || !accountEmptyEl) return;
+
+      if (!cards.length) {
+        accountCardsEl.innerHTML = "";
+        if (accountCarouselEl) accountCarouselEl.hidden = true;
+        if (cardCarouselMeta) {
+          cardCarouselMeta.hidden = true;
+          cardCarouselMeta.textContent = "";
+        }
+        accountEmptyEl.hidden = false;
+        if (addOpenBtn) addOpenBtn.disabled = true;
+        return;
+      }
+
+      if (accountCarouselEl) accountCarouselEl.hidden = false;
+      accountEmptyEl.hidden = true;
+      if (addOpenBtn) addOpenBtn.disabled = false;
+
+      syncActiveCardIndex();
+
+      var idx = -1;
+      var card = null;
+      for (var ci = 0; ci < cards.length; ci++) {
+        if (cards[ci].id === activeCardId) {
+          idx = ci;
+          card = cards[ci];
+          break;
+        }
+      }
+      if (!card && cards.length) {
+        card = cards[0];
+        idx = 0;
+        activeCardId = card.id;
+        saveActiveCardId(activeCardId);
+      }
+
+      accountCardsEl.innerHTML = "";
+
+      var hideNav = cards.length <= 1;
+      if (cardPrevBtn) {
+        cardPrevBtn.hidden = hideNav;
+        cardPrevBtn.disabled = hideNav || idx <= 0;
+      }
+      if (cardNextBtn) {
+        cardNextBtn.hidden = hideNav;
+        cardNextBtn.disabled = hideNav || idx < 0 || idx >= cards.length - 1;
+      }
+      if (cardCarouselMeta) {
+        if (cards.length > 1 && idx >= 0) {
+          cardCarouselMeta.hidden = false;
+          cardCarouselMeta.textContent =
+            "Card " + (idx + 1) + " of " + cards.length;
+        } else {
+          cardCarouselMeta.hidden = true;
+          cardCarouselMeta.textContent = "";
+        }
+      }
+
+      if (!card) return;
+
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "cc-account-card";
+      btn.dataset.cardId = card.id;
+      btn.setAttribute("aria-current", "true");
+      btn.setAttribute("aria-haspopup", "dialog");
+      btn.setAttribute("aria-controls", "cc-card-actions-dialog");
+      var bal = computeRunningBalance(card, allTransactions);
+      btn.setAttribute(
+        "aria-label",
+        "Card options: " +
+          card.name +
+          ", balance " +
+          currency.format(bal !== null ? bal : 0),
+      );
+
+      var icon = document.createElement("span");
+      icon.className = "cc-account-card__icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.innerHTML =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M2 10h20"/><rect x="5" y="14" width="5" height="2" rx="0.5" fill="currentColor"/></svg>';
+
+      var body = document.createElement("span");
+      body.className = "cc-account-card__body";
+
+      var nameEl = document.createElement("span");
+      nameEl.className = "cc-account-card__name";
+      nameEl.textContent = card.name;
+
+      var valEl = document.createElement("span");
+      valEl.className = "cc-account-card__value";
+      valEl.setAttribute("aria-live", "polite");
+      valEl.textContent = bal !== null ? currency.format(bal) : "—";
+
+      var subEl = document.createElement("span");
+      subEl.className = "cc-account-card__sub";
+      subEl.textContent = "Balance after all transactions on this card";
+
+      body.appendChild(nameEl);
+      body.appendChild(valEl);
+      body.appendChild(subEl);
+      btn.appendChild(icon);
+      btn.appendChild(body);
+      accountCardsEl.appendChild(btn);
+    }
+
+    function closeCardActionsDialog() {
+      if (cardActionsDialog && typeof cardActionsDialog.close === "function") {
+        cardActionsDialog.close();
+      }
+    }
+
+    function openCardActionsDialog() {
+      if (
+        !cardActionsDialog ||
+        typeof cardActionsDialog.showModal !== "function"
+      )
+        return;
+      var c = pendingActionsCardId
+        ? findCardById(pendingActionsCardId)
+        : null;
+      if (cardActionsDesc && c) {
+        cardActionsDesc.textContent = "Choose an action for " + c.name + ".";
+      }
+      cardActionsDialog.showModal();
+    }
+
+    function onCardBoxClick(cardId) {
+      if (!cardId) return;
+      pendingActionsCardId = cardId;
+      activeCardId = cardId;
+      saveActiveCardId(activeCardId);
+      applyFilters();
+      openCardActionsDialog();
+    }
+
+    function openManageForEdit(cardId) {
+      if (!manageCardDialog || typeof manageCardDialog.showModal !== "function")
+        return;
+      closeCardActionsDialog();
+      clearManageCardErrors();
+      isAddingCard = false;
+      manageEditingCardId = cardId;
+      var acc = findCardById(cardId);
+      if (manageCardTitle) manageCardTitle.textContent = "Credit card";
+      if (manageName) manageName.value = acc ? acc.name : "";
+      if (manageBorrowed)
+        manageBorrowed.value = acc ? String(acc.borrowedAmount) : "1000";
+      if (openDeleteCardBtn) {
+        openDeleteCardBtn.hidden = false;
+        openDeleteCardBtn.disabled = false;
+      }
+      manageCardDialog.showModal();
+      requestAnimationFrame(function () {
+        if (manageName) manageName.focus();
+      });
+    }
+
+    function openManageForAdd() {
+      if (!manageCardDialog || typeof manageCardDialog.showModal !== "function")
+        return;
+      closeCardActionsDialog();
+      clearManageCardErrors();
+      isAddingCard = true;
+      manageEditingCardId = null;
+      if (manageCardTitle) manageCardTitle.textContent = "Add credit card";
+      if (manageName) manageName.value = "Capital One";
+      if (manageBorrowed) manageBorrowed.value = "1000";
+      if (openDeleteCardBtn) {
+        openDeleteCardBtn.hidden = true;
+        openDeleteCardBtn.disabled = true;
+      }
+      manageCardDialog.showModal();
+      requestAnimationFrame(function () {
+        if (manageName) manageName.focus();
+      });
+    }
+
+    function clearManageCardErrors() {
+      if (manageNameErr) {
+        manageNameErr.hidden = true;
+        manageNameErr.textContent = "";
+      }
+      if (manageBorrowedErr) {
+        manageBorrowedErr.hidden = true;
+        manageBorrowedErr.textContent = "";
+      }
+      if (manageName) manageName.removeAttribute("aria-invalid");
+      if (manageBorrowed) manageBorrowed.removeAttribute("aria-invalid");
+    }
+
+    function closeManageCardModal() {
+      if (manageCardDialog && typeof manageCardDialog.close === "function") {
+        manageCardDialog.close();
+      }
+    }
+
+    function openDeleteCardConfirm() {
+      if (
+        !deleteCardDialog ||
+        typeof deleteCardDialog.showModal !== "function"
+      )
+        return;
+      var c = manageEditingCardId ? findCardById(manageEditingCardId) : null;
+      var label = c ? c.name : "this card";
+      if (deleteCardLede) {
+        deleteCardLede.textContent =
+          "This will remove " +
+          label +
+          " and all transactions on this card. If this is your default card, bundled demo transactions are removed too. This cannot be undone.";
+      }
+      deleteCardDialog.showModal();
+    }
+
+    function closeDeleteCardModal() {
+      if (deleteCardDialog && typeof deleteCardDialog.close === "function") {
+        deleteCardDialog.close();
+      }
+    }
+
+    function confirmDeleteCreditCard() {
+      if (!manageEditingCardId) return;
+      deleteCardById(manageEditingCardId);
+      closeDeleteCardModal();
+      closeManageCardModal();
+      currentPage = 1;
+      applyFilters();
     }
 
     function findTxById(id) {
@@ -661,7 +1182,11 @@
     function updateMonthCard(btn, y, m, isActive) {
       if (!btn) return;
       var cap = sumBudgetMaximums(budgetsData);
-      var exp = totalExpenseInMonth(allTransactions, y, m);
+      var exp = totalExpenseInMonth(
+        filterRowsByCardId(allTransactions, activeCardId),
+        y,
+        m,
+      );
       btn.classList.toggle("budgets-month-card--active", isActive);
       btn.classList.toggle("budgets-month-card--empty", cap <= 0);
 
@@ -715,7 +1240,8 @@
       var sortMode = sortEl.value;
       var cat = catEl.value;
 
-      var rows = filterByCategory(allTransactions, cat);
+      var rows = filterRowsByCardId(allTransactions, activeCardId);
+      rows = filterByCategory(rows, cat);
       rows = filterBySearch(rows, q);
       rows = filterByCalendarMonth(rows, monthNavYear, monthNavMonth);
       rows = sortRows(rows, sortMode);
@@ -754,6 +1280,7 @@
 
       renderPagination(totalPages, total);
       renderMonthNav();
+      renderAccountCards();
     }
 
     function renderPagination(totalPages, totalCount) {
@@ -1109,6 +1636,7 @@
           date: dateInputToISO(addDate.value),
           amount: amtNum,
           recurring: addRecurring.checked,
+          cardId: activeCardId || DEFAULT_CARD_ID,
         };
         var addedList = loadAddedTransactions();
         addedList.unshift(newTx);
@@ -1245,20 +1773,158 @@
       });
     }
 
+    if (accountCardsEl) {
+      accountCardsEl.addEventListener("click", function (e) {
+        var btn = e.target.closest(".cc-account-card");
+        if (!btn || !accountCardsEl.contains(btn)) return;
+        var cid = btn.dataset.cardId;
+        if (!cid) return;
+        onCardBoxClick(cid);
+      });
+    }
+    if (accountAddBtn) {
+      accountAddBtn.addEventListener("click", function () {
+        openManageForAdd();
+      });
+    }
+    if (cardActionsClose && cardActionsDialog) {
+      cardActionsClose.addEventListener("click", closeCardActionsDialog);
+    }
+    if (cardActionsDialog) {
+      cardActionsDialog.addEventListener("click", function (e) {
+        if (e.target === cardActionsDialog) closeCardActionsDialog();
+      });
+    }
+    if (cardActionsManage) {
+      cardActionsManage.addEventListener("click", function () {
+        if (pendingActionsCardId) {
+          openManageForEdit(pendingActionsCardId);
+        }
+      });
+    }
+    if (cardActionsAddCard) {
+      cardActionsAddCard.addEventListener("click", function () {
+        openManageForAdd();
+      });
+    }
+    if (cardPrevBtn) {
+      cardPrevBtn.addEventListener("click", function () {
+        stepActiveCard(-1);
+      });
+    }
+    if (cardNextBtn) {
+      cardNextBtn.addEventListener("click", function () {
+        stepActiveCard(1);
+      });
+    }
+    if (manageCardClose && manageCardDialog) {
+      manageCardClose.addEventListener("click", closeManageCardModal);
+    }
+    if (manageCardDialog) {
+      manageCardDialog.addEventListener("click", function (e) {
+        if (e.target === manageCardDialog) closeManageCardModal();
+      });
+    }
+    if (manageCardForm && manageCardDialog) {
+      manageCardForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        clearManageCardErrors();
+        var nameVal = manageName ? manageName.value.trim() : "";
+        var borrowedRaw = manageBorrowed ? manageBorrowed.value.trim() : "";
+        var borrowedNum =
+          borrowedRaw === "" ? NaN : Number(borrowedRaw);
+        var ok = true;
+
+        if (!nameVal) {
+          if (manageNameErr) {
+            manageNameErr.textContent = "Enter a bank name.";
+            manageNameErr.hidden = false;
+          }
+          if (manageName) manageName.setAttribute("aria-invalid", "true");
+          ok = false;
+        } else if (nameVal.length > NAME_MAX) {
+          if (manageNameErr) {
+            manageNameErr.textContent =
+              "Name must be " + NAME_MAX + " characters or fewer.";
+            manageNameErr.hidden = false;
+          }
+          if (manageName) manageName.setAttribute("aria-invalid", "true");
+          ok = false;
+        }
+
+        if (borrowedRaw === "" || !Number.isFinite(borrowedNum)) {
+          if (manageBorrowedErr) {
+            manageBorrowedErr.textContent = "Enter a valid borrowed amount.";
+            manageBorrowedErr.hidden = false;
+          }
+          if (manageBorrowed)
+            manageBorrowed.setAttribute("aria-invalid", "true");
+          ok = false;
+        }
+
+        if (!ok) return;
+
+        if (isAddingCard) {
+          var nid = newCardId();
+          cards.push({
+            id: nid,
+            name: nameVal,
+            borrowedAmount: borrowedNum,
+          });
+          activeCardId = nid;
+          saveActiveCardId(activeCardId);
+        } else if (manageEditingCardId) {
+          var target = findCardById(manageEditingCardId);
+          if (target) {
+            target.name = nameVal;
+            target.borrowedAmount = borrowedNum;
+          }
+        }
+        saveCards(cards);
+        closeManageCardModal();
+        applyFilters();
+      });
+    }
+    if (openDeleteCardBtn) {
+      openDeleteCardBtn.addEventListener("click", openDeleteCardConfirm);
+    }
+    if (deleteCardYes) {
+      deleteCardYes.addEventListener("click", confirmDeleteCreditCard);
+    }
+    if (deleteCardNo) {
+      deleteCardNo.addEventListener("click", closeDeleteCardModal);
+    }
+    if (deleteCardClose) {
+      deleteCardClose.addEventListener("click", closeDeleteCardModal);
+    }
+    if (deleteCardDialog) {
+      deleteCardDialog.addEventListener("click", function (e) {
+        if (e.target === deleteCardDialog) closeDeleteCardModal();
+      });
+    }
+
     fetch("./data.json")
       .then(function (res) {
         if (!res.ok) throw new Error("Failed to load data");
         return res.json();
       })
       .then(function (data) {
-        jsonTransactionsCache = data.creditCardTransactions || [];
+        jsonTransactionsCache = isSeedCleared()
+          ? []
+          : data.creditCardTransactions || [];
         budgetsData = data.budgets || [];
+        var st = loadCardsState();
+        cards = st.cards;
+        activeCardId = st.activeCardId;
         rebuildAllFromCache();
         applyFilters();
         main.removeAttribute("aria-busy");
       })
       .catch(function () {
         main.removeAttribute("aria-busy");
+        var stErr = loadCardsState();
+        cards = stErr.cards;
+        activeCardId = stErr.activeCardId;
         tbody.innerHTML = "";
         emptyEl.hidden = true;
         var err = document.createElement("p");
@@ -1271,6 +1937,7 @@
         nextBtn.disabled = true;
         pagesEl.innerHTML = "";
         pagNav.hidden = true;
+        renderAccountCards();
       });
   });
 })();

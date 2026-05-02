@@ -118,6 +118,11 @@
   outline-offset: 3px;
 }
 
+.transactions-add-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .transactions-panel {
   padding: 1.5rem clamp(1rem, 3vw, 1.5rem) 1.25rem;
   background-color: var(--color-card);
@@ -900,4 +905,254 @@
 .tx-modal__submit:focus-visible {
   outline: 2px solid var(--color-accent-green);
   outline-offset: 3px;
+}
+
+/* Credit card account summary */
+.cc-account-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 1.25rem;
+}
+
+.cc-account-carousel {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.75rem;
+  max-width: min(100%, 36rem);
+}
+
+.cc-account-carousel[hidden] {
+  display: none !important;
+}
+
+.cc-account-carousel__nav {
+  flex-shrink: 0;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--color-divider);
+  border-radius: 0.5rem;
+  background-color: var(--color-card);
+  color: var(--color-heading);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.cc-account-carousel__nav:hover:not(:disabled) {
+  border-color: var(--color-accent-green);
+}
+
+.cc-account-carousel__nav:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 2px;
+}
+
+.cc-account-carousel__nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cc-account-cards {
+  display: flex;
+  flex: 0 1 22rem;
+  min-width: 0;
+  max-width: 22rem;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.cc-account-cards:empty {
+  min-height: 0;
+}
+
+.cc-account-carousel__meta {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  text-align: center;
+  width: 100%;
+  max-width: min(100%, 36rem);
+}
+
+.cc-account-card[aria-current="true"] {
+  border-color: var(--color-accent-green);
+  box-shadow: 0 4px 16px rgb(39 124 120 / 0.2);
+}
+
+.cc-card-actions__buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0 0 0.25rem;
+}
+
+.cc-card-actions__add {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-divider);
+  background-color: transparent;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.cc-card-actions__add:hover {
+  border-color: var(--color-accent-green);
+  color: var(--color-accent-green);
+}
+
+.cc-card-actions__add:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 3px;
+}
+
+.cc-account-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  max-width: 22rem;
+  width: 100%;
+  padding: 1.25rem 1.35rem;
+  border-radius: 0.75rem;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-divider);
+  box-shadow: 0 2px 12px rgb(32 31 36 / 0.06);
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.cc-account-card:hover {
+  border-color: var(--color-accent-green);
+  box-shadow: 0 4px 16px rgb(32 31 36 / 0.1);
+}
+
+.cc-account-card:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 3px;
+}
+
+[data-theme="dark"] .cc-account-card {
+  box-shadow: 0 2px 16px rgb(0 0 0 / 0.35);
+}
+
+[data-theme="dark"] .cc-account-card:hover {
+  box-shadow: 0 4px 20px rgb(0 0 0 / 0.45);
+}
+
+.cc-account-card__icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--color-heading);
+}
+
+[data-theme="dark"] .cc-account-card__icon {
+  color: #f2f2f7;
+  opacity: 0.95;
+}
+
+[data-theme="light"] .cc-account-card__icon {
+  opacity: 0.88;
+}
+
+.cc-account-card__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.cc-account-card__name {
+  display: block;
+  margin: 0 0 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.cc-account-card__value {
+  display: block;
+  margin: 0 0 0.25rem;
+  font-size: clamp(1.5rem, 3vw, 1.75rem);
+  font-weight: 700;
+  color: var(--color-heading);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.cc-account-card__sub {
+  display: block;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
+.cc-account-empty {
+  max-width: 28rem;
+  padding: 1.25rem 1.35rem;
+  border-radius: 0.75rem;
+  border: 1px dashed var(--color-divider);
+  background-color: var(--color-card);
+}
+
+.cc-account-empty__text {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.cc-account-empty__btn {
+  padding: 0.65rem 1.15rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-divider);
+  background-color: var(--color-card);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.cc-account-empty__btn:hover {
+  border-color: var(--color-accent-green);
+  color: var(--color-accent-green);
+}
+
+.cc-account-empty__btn:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 2px;
 }
