@@ -155,9 +155,10 @@
     var cardsRoot = document.getElementById("budgets-cards-root");
 
     var budgetMonthYear = document.getElementById("budget-month-year");
-    var budgetMonthPrev = document.getElementById("budget-month-prev");
-    var budgetMonthCurrent = document.getElementById("budget-month-current");
-    var budgetMonthNext = document.getElementById("budget-month-next");
+    var budgetMonthStrip = document.getElementById("budget-month-strip");
+
+    var MONTH_STRIP_SLOTS = 7;
+    var MONTH_STRIP_CENTER = 3;
 
     var addBtn = document.getElementById("budget-add-open");
     var addDialog = document.getElementById("budget-add-dialog");
@@ -247,17 +248,18 @@
     }
 
     function renderMonthNav() {
-      if (!budgetMonthYear || !budgetMonthPrev || !budgetMonthCurrent || !budgetMonthNext)
-        return;
+      if (!budgetMonthYear || !budgetMonthStrip) return;
+
+      var buttons = budgetMonthStrip.querySelectorAll(".budgets-month-card");
+      if (buttons.length !== MONTH_STRIP_SLOTS) return;
 
       budgetMonthYear.textContent = String(viewYear);
 
-      var prev = addCalendarMonths(viewYear, viewMonth, -1);
-      var next = addCalendarMonths(viewYear, viewMonth, 1);
-
-      updateMonthCard(budgetMonthPrev, prev.y, prev.m, false);
-      updateMonthCard(budgetMonthCurrent, viewYear, viewMonth, true);
-      updateMonthCard(budgetMonthNext, next.y, next.m, false);
+      for (var slot = 0; slot < MONTH_STRIP_SLOTS; slot++) {
+        var offset = slot - MONTH_STRIP_CENTER;
+        var t = addCalendarMonths(viewYear, viewMonth, offset);
+        updateMonthCard(buttons[slot], t.y, t.m, offset === 0);
+      }
     }
 
     function closeAllBudgetMenus() {
@@ -817,19 +819,23 @@
       renderCards();
     }
 
-    if (budgetMonthPrev) {
-      budgetMonthPrev.addEventListener("click", function () {
-        var p = addCalendarMonths(viewYear, viewMonth, -1);
-        viewYear = p.y;
-        viewMonth = p.m;
-        renderAll();
-      });
-    }
-    if (budgetMonthNext) {
-      budgetMonthNext.addEventListener("click", function () {
-        var n = addCalendarMonths(viewYear, viewMonth, 1);
-        viewYear = n.y;
-        viewMonth = n.m;
+    if (budgetMonthStrip) {
+      budgetMonthStrip.addEventListener("click", function (e) {
+        var btn = e.target.closest(".budgets-month-card");
+        if (!btn || !budgetMonthStrip.contains(btn)) return;
+        var buttons = budgetMonthStrip.querySelectorAll(".budgets-month-card");
+        var slot = -1;
+        for (var i = 0; i < buttons.length; i++) {
+          if (buttons[i] === btn) {
+            slot = i;
+            break;
+          }
+        }
+        if (slot < 0) return;
+        var offset = slot - MONTH_STRIP_CENTER;
+        var t = addCalendarMonths(viewYear, viewMonth, offset);
+        viewYear = t.y;
+        viewMonth = t.m;
         renderAll();
       });
     }
