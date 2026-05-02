@@ -691,8 +691,8 @@
     var txMonthYear = document.getElementById("cc-month-year");
     var txYearPanel = document.getElementById("cc-month-year-panel");
     var txMonthStrip = document.getElementById("cc-month-strip");
-    var monthNavYear = 2026;
-    var monthNavMonth = 7;
+    var monthNavYear = new Date().getFullYear();
+    var monthNavMonth = new Date().getMonth();
 
     var cards = [];
     var activeCardId = null;

@@ -530,8 +530,8 @@
     var txMonthYear = document.getElementById("tx-month-year");
     var txYearPanel = document.getElementById("tx-month-year-panel");
     var txMonthStrip = document.getElementById("tx-month-strip");
-    var monthNavYear = 2026;
-    var monthNavMonth = 7;
+    var monthNavYear = new Date().getFullYear();
+    var monthNavMonth = new Date().getMonth();
 
     var monthAriaFmt = new Intl.DateTimeFormat("en-US", {
       month: "long",

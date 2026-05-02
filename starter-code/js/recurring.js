@@ -503,8 +503,8 @@
     var recurringAddDueErr = document.getElementById("recurring-add-dueday-err");
     var recurringAddAmountErr = document.getElementById("recurring-add-amount-err");
 
-    var viewYear = 2026;
-    var viewMonth = 7;
+    var viewYear = new Date().getFullYear();
+    var viewMonth = new Date().getMonth();
 
     var monthAriaFmt = new Intl.DateTimeFormat("en-US", {
       month: "long",

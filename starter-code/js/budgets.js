@@ -156,6 +156,107 @@
     return "conic-gradient(from -90deg, " + parts.join(", ") + ")";
   }
 
+  /** Same keys as transactions.js / overview.js — budgets reflect saved tx edits. */
+  var TX_DELETED_KEY = "pf-tx-deleted-ids";
+  var TX_OVERRIDES_KEY = "pf-tx-overrides";
+  var TX_ADDED_KEY = "pf-tx-user-added";
+  var PF_BUDGETS_STORAGE_KEY = "pf-budgets-app-state-v1";
+
+  function txOvLoadDeletedIds() {
+    try {
+      var raw = localStorage.getItem(TX_DELETED_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function txOvLoadOverrides() {
+    try {
+      var raw = localStorage.getItem(TX_OVERRIDES_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function txOvLoadAdded() {
+    try {
+      var raw = localStorage.getItem(TX_ADDED_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function txOvApplyOverrides(tx, ov) {
+    if (!ov) return tx;
+    return {
+      avatar: tx.avatar,
+      name: ov.name !== undefined ? ov.name : tx.name,
+      category: ov.category !== undefined ? ov.category : tx.category,
+      date: ov.date !== undefined ? ov.date : tx.date,
+      amount: ov.amount !== undefined ? ov.amount : tx.amount,
+      recurring: !!tx.recurring,
+      __txId: tx.__txId,
+    };
+  }
+
+  function rebuildMainTransactionsFromStorage(jsonTransactions) {
+    var deleted = txOvLoadDeletedIds();
+    var overrides = txOvLoadOverrides();
+    var added = txOvLoadAdded();
+
+    var jsonPart = (jsonTransactions || [])
+      .map(function (t, i) {
+        var id = "tx-b-" + i;
+        if (deleted.has(id)) return null;
+        var tx = {
+          avatar: t.avatar,
+          name: t.name,
+          category: t.category,
+          date: t.date,
+          amount: t.amount,
+          recurring: !!t.recurring,
+          __txId: id,
+        };
+        return txOvApplyOverrides(tx, overrides[id]);
+      })
+      .filter(Boolean);
+
+    var addedPart = added.map(function (t) {
+      return txOvApplyOverrides(t, overrides[t.__txId]);
+    });
+
+    return addedPart.concat(jsonPart);
+  }
+
+  function normalizeBudgetRow(b) {
+    return {
+      category: String(b && b.category !== undefined ? b.category : "General"),
+      maximum: Number.isFinite(Number(b && b.maximum)) ? Number(b.maximum) : 0,
+      theme: typeof (b && b.theme) === "string" ? b.theme : "#277C78",
+    };
+  }
+
+  function loadBudgetsAppStateFromStorage(jsonBudgets) {
+    try {
+      var raw = localStorage.getItem(PF_BUDGETS_STORAGE_KEY);
+      if (!raw) {
+        return (jsonBudgets || []).slice().map(normalizeBudgetRow);
+      }
+      var o = JSON.parse(raw);
+      if (!o || !Array.isArray(o.budgets)) {
+        return (jsonBudgets || []).slice().map(normalizeBudgetRow);
+      }
+      return o.budgets.map(normalizeBudgetRow);
+    } catch (e) {
+      return (jsonBudgets || []).slice().map(normalizeBudgetRow);
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     var main = document.querySelector(".budgets-page");
     if (!main) return;
@@ -206,8 +307,17 @@
     var pendingDeleteIndex = null;
     var pendingEditIndex = null;
 
-    var viewYear = 2026;
-    var viewMonth = 7;
+    var viewYear = new Date().getFullYear();
+    var viewMonth = new Date().getMonth();
+
+    function saveBudgetsAppState() {
+      try {
+        localStorage.setItem(
+          PF_BUDGETS_STORAGE_KEY,
+          JSON.stringify({ budgets: budgetsState })
+        );
+      } catch (e) {}
+    }
 
     var monthAriaFmt = new Intl.DateTimeFormat("en-US", {
       month: "long",
@@ -838,6 +948,7 @@
       renderMonthNav();
       renderDonutAndLegend();
       renderCards();
+      saveBudgetsAppState();
     }
 
     if (budgetMonthStrip) {
@@ -989,8 +1100,10 @@
         return res.json();
       })
       .then(function (data) {
-        transactions = data.transactions || [];
-        budgetsState = (data.budgets || []).slice();
+        transactions = rebuildMainTransactionsFromStorage(
+          data.transactions || []
+        );
+        budgetsState = loadBudgetsAppStateFromStorage(data.budgets || []);
         renderAll();
         main.removeAttribute("aria-busy");
       })

@@ -224,6 +224,32 @@
     }
   }
 
+  var PF_BUDGETS_STORAGE_KEY = "pf-budgets-app-state-v1";
+
+  function normalizeBudgetRowFromStorage(b) {
+    return {
+      category: String(b && b.category !== undefined ? b.category : "General"),
+      maximum: Number.isFinite(Number(b && b.maximum)) ? Number(b.maximum) : 0,
+      theme: typeof (b && b.theme) === "string" ? b.theme : "#277C78",
+    };
+  }
+
+  function mergeBudgetsFromStorage(jsonBudgets) {
+    try {
+      var raw = localStorage.getItem(PF_BUDGETS_STORAGE_KEY);
+      if (!raw) {
+        return (jsonBudgets || []).map(normalizeBudgetRowFromStorage);
+      }
+      var o = JSON.parse(raw);
+      if (!o || !Array.isArray(o.budgets)) {
+        return (jsonBudgets || []).map(normalizeBudgetRowFromStorage);
+      }
+      return o.budgets.map(normalizeBudgetRowFromStorage);
+    } catch (e) {
+      return (jsonBudgets || []).map(normalizeBudgetRowFromStorage);
+    }
+  }
+
   function loadCustomBillsOverview() {
     try {
       var raw = localStorage.getItem(CUSTOM_BILLS_KEY);
@@ -794,8 +820,8 @@
     var overviewYearPanel = document.getElementById("overview-month-year-panel");
     var overviewMonthStrip = document.getElementById("overview-month-strip");
 
-    var viewYear = 2026;
-    var viewMonth = 7;
+    var viewYear = new Date().getFullYear();
+    var viewMonth = new Date().getMonth();
 
     var monthAriaFmt = new Intl.DateTimeFormat("en-US", {
       month: "long",
@@ -858,7 +884,9 @@
       if (buttons.length !== MONTH_STRIP_SLOTS) return;
 
       var transactions = overviewData ? mergedMainTransactions : [];
-      var budgets = overviewData ? overviewData.budgets || [] : [];
+      var budgets = overviewData
+        ? mergeBudgetsFromStorage(overviewData.budgets || [])
+        : [];
 
       overviewMonthYear.textContent = String(viewYear);
 
@@ -928,7 +956,7 @@
         inMonth
       );
 
-      var budgets = overviewData.budgets || [];
+      var budgets = mergeBudgetsFromStorage(overviewData.budgets || []);
       var spents = [];
       var themes = [];
       var budgetLimit = 0;
