@@ -1,6 +1,9 @@
 (function () {
   var POT_NAME_MAX = 30;
 
+  /** Pots totals + main balance (synced with overview via same key). */
+  var PF_POTS_STORAGE_KEY = "pf-pots-app-state-v1";
+
   var THEME_PRESETS = [
     { label: "Green", hex: "#277C78" },
     { label: "Yellow", hex: "#F2CDAC" },
@@ -78,6 +81,49 @@
 
     var potsState = [];
     var currentBalance = 0;
+
+    function normalizePotRow(p) {
+      return {
+        name: String(p.name || "").trim() || "Pot",
+        target: Number.isFinite(Number(p.target)) ? Number(p.target) : 0,
+        total: Number.isFinite(Number(p.total)) ? Number(p.total) : 0,
+        theme: typeof p.theme === "string" ? p.theme : "#277C78",
+      };
+    }
+
+    function loadPotsAppState() {
+      try {
+        var raw = localStorage.getItem(PF_POTS_STORAGE_KEY);
+        if (!raw) return null;
+        var o = JSON.parse(raw);
+        if (!o || typeof o !== "object" || !Array.isArray(o.pots)) return null;
+        return o;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function savePotsAppState() {
+      try {
+        localStorage.setItem(
+          PF_POTS_STORAGE_KEY,
+          JSON.stringify({
+            pots: potsState.map(function (p) {
+              return {
+                name: p.name,
+                target: p.target,
+                total: p.total,
+                theme: p.theme,
+              };
+            }),
+            mainBalance: currentBalance,
+          })
+        );
+      } catch (e) {
+        /* quota / private mode */
+      }
+    }
+
     var pendingDeleteIndex = null;
     var pendingEditIndex = null;
     var pendingMoneyIndex = null;
@@ -176,6 +222,7 @@
         empty.textContent =
           "No pots yet. Add a pot to start saving toward a goal.";
         gridRoot.appendChild(empty);
+        savePotsAppState();
         return;
       }
 
@@ -346,6 +393,7 @@
           gridRoot.appendChild(article);
         })(i);
       }
+      savePotsAppState();
     }
 
     function openAddModal() {
@@ -756,18 +804,32 @@
         return res.json();
       })
       .then(function (data) {
-        potsState = (data.pots || []).map(function (p) {
-          return {
-            name: p.name,
-            target: p.target,
-            total: p.total,
-            theme: p.theme,
-          };
-        });
-        currentBalance = ledgerBalanceFromTransactions(
+        var baseLedger = ledgerBalanceFromTransactions(
           data.transactions || [],
           data.openingBalance
         );
+        var seed = (data.pots || []).map(normalizePotRow);
+        var stored = loadPotsAppState();
+
+        if (stored && Array.isArray(stored.pots)) {
+          potsState = stored.pots.map(normalizePotRow);
+          if (
+            typeof stored.mainBalance === "number" &&
+            Number.isFinite(stored.mainBalance)
+          ) {
+            currentBalance = Math.max(0, stored.mainBalance);
+          } else {
+            var inPots = 0;
+            for (var pi = 0; pi < potsState.length; pi++) {
+              inPots += potsState[pi].total;
+            }
+            currentBalance = Math.max(0, baseLedger - inPots);
+          }
+        } else {
+          potsState = seed;
+          currentBalance = baseLedger;
+        }
+
         populateThemeSelect(addTheme, addThemeSwatch, null);
         populateThemeSelect(editTheme, editThemeSwatch, THEME_PRESETS[0].hex);
         syncAddThemeSwatch();

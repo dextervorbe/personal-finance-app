@@ -128,6 +128,102 @@
   var CUSTOM_BILLS_KEY = "pf-recurring-custom-bills";
   var PAID_OVERRIDES_KEY = "pf-recurring-paid-overrides";
 
+  /** Same keys as transactions.js — overview reflects saved edits. */
+  var TX_DELETED_KEY = "pf-tx-deleted-ids";
+  var TX_OVERRIDES_KEY = "pf-tx-overrides";
+  var TX_ADDED_KEY = "pf-tx-user-added";
+  var PF_POTS_STORAGE_KEY = "pf-pots-app-state-v1";
+
+  function txOvLoadDeletedIds() {
+    try {
+      var raw = localStorage.getItem(TX_DELETED_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function txOvLoadOverrides() {
+    try {
+      var raw = localStorage.getItem(TX_OVERRIDES_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function txOvLoadAdded() {
+    try {
+      var raw = localStorage.getItem(TX_ADDED_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function txOvApplyOverrides(tx, ov) {
+    if (!ov) return tx;
+    return {
+      avatar: tx.avatar,
+      name: ov.name !== undefined ? ov.name : tx.name,
+      category: ov.category !== undefined ? ov.category : tx.category,
+      date: ov.date !== undefined ? ov.date : tx.date,
+      amount: ov.amount !== undefined ? ov.amount : tx.amount,
+      recurring: !!tx.recurring,
+      __txId: tx.__txId,
+    };
+  }
+
+  function rebuildMainTransactionsFromStorage(jsonTransactions) {
+    var deleted = txOvLoadDeletedIds();
+    var overrides = txOvLoadOverrides();
+    var added = txOvLoadAdded();
+
+    var jsonPart = (jsonTransactions || [])
+      .map(function (t, i) {
+        var id = "tx-b-" + i;
+        if (deleted.has(id)) return null;
+        var tx = {
+          avatar: t.avatar,
+          name: t.name,
+          category: t.category,
+          date: t.date,
+          amount: t.amount,
+          recurring: !!t.recurring,
+          __txId: id,
+        };
+        return txOvApplyOverrides(tx, overrides[id]);
+      })
+      .filter(Boolean);
+
+    var addedPart = added.map(function (t) {
+      return txOvApplyOverrides(t, overrides[t.__txId]);
+    });
+
+    return addedPart.concat(jsonPart);
+  }
+
+  function mergePotsFromStorage(jsonPots) {
+    try {
+      var raw = localStorage.getItem(PF_POTS_STORAGE_KEY);
+      if (!raw) return jsonPots || [];
+      var o = JSON.parse(raw);
+      if (!o || !Array.isArray(o.pots)) return jsonPots || [];
+      return o.pots.map(function (p) {
+        return {
+          name: p.name,
+          target: Number(p.target),
+          total: Number(p.total),
+          theme: p.theme || "#277C78",
+        };
+      });
+    } catch (e) {
+      return jsonPots || [];
+    }
+  }
+
   function loadCustomBillsOverview() {
     try {
       var raw = localStorage.getItem(CUSTOM_BILLS_KEY);
@@ -708,6 +804,7 @@
     });
 
     var overviewData = null;
+    var mergedMainTransactions = [];
 
     function sumBudgetMaximums(budgets) {
       var s = 0;
@@ -760,7 +857,7 @@
       var buttons = overviewMonthStrip.querySelectorAll(".budgets-month-card");
       if (buttons.length !== MONTH_STRIP_SLOTS) return;
 
-      var transactions = overviewData ? overviewData.transactions || [] : [];
+      var transactions = overviewData ? mergedMainTransactions : [];
       var budgets = overviewData ? overviewData.budgets || [] : [];
 
       overviewMonthYear.textContent = String(viewYear);
@@ -782,7 +879,7 @@
     function renderOverviewContent() {
       if (!overviewData) return;
 
-      var transactions = overviewData.transactions || [];
+      var transactions = mergedMainTransactions;
       var ledgerBalance = ledgerBalanceFromTransactions(
         transactions,
         overviewData.openingBalance
@@ -805,7 +902,7 @@
       if (incomeScopeEl) incomeScopeEl.textContent = scopeLine;
       if (expensesScopeEl) expensesScopeEl.textContent = scopeLine;
 
-      var pots = overviewData.pots || [];
+      var pots = mergePotsFromStorage(overviewData.pots || []);
       var potsSaved = 0;
       for (var pi = 0; pi < pots.length; pi++) {
         potsSaved += pots[pi].total;
@@ -927,6 +1024,13 @@
     }
 
     function renderAll() {
+      if (overviewData) {
+        mergedMainTransactions = rebuildMainTransactionsFromStorage(
+          overviewData.transactions || []
+        );
+      } else {
+        mergedMainTransactions = [];
+      }
       renderMonthNav();
       renderOverviewContent();
     }
