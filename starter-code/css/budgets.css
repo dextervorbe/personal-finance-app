@@ -121,15 +121,15 @@
   stays aligned with the selected budget month (still slot index 3).
 */
 @media (max-width: 56rem) {
-  #budget-month-strip > .budgets-month-card:first-child,
-  #budget-month-strip > .budgets-month-card:last-child {
+  .month-nav-strip > .budgets-month-card:first-child,
+  .month-nav-strip > .budgets-month-card:last-child {
     display: none;
   }
 }
 
 @media (max-width: 42rem) {
-  #budget-month-strip > .budgets-month-card:nth-child(2),
-  #budget-month-strip > .budgets-month-card:nth-child(6) {
+  .month-nav-strip > .budgets-month-card:nth-child(2),
+  .month-nav-strip > .budgets-month-card:nth-child(6) {
     display: none;
   }
 }

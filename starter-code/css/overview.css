@@ -19,8 +19,36 @@
   margin-inline: auto;
 }
 
+.overview-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.overview-page__header-mid {
+  flex: 1 1 14rem;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  order: 2;
+}
+
+.overview-page__header .overview__title {
+  order: 1;
+}
+
+@media (max-width: 52rem) {
+  .overview-page__header-mid {
+    flex: 1 1 100%;
+    order: 4;
+  }
+}
+
 .overview__title {
-  margin: 0 0 2rem;
+  margin: 0;
   font-size: clamp(1.75rem, 4vw, 2rem);
   font-weight: 700;
   color: var(--color-heading);
