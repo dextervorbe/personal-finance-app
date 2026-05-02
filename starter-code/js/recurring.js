@@ -107,14 +107,203 @@
     return out;
   }
 
-  function unpaidRecurringForMonth(transactions, year, monthIndex) {
-    var paidNames = new Set();
-    var paid = paidRecurringInMonth(transactions, year, monthIndex);
-    for (var i = 0; i < paid.length; i++) {
-      paidNames.add(paid[i].name);
+  var STORAGE_KEY = "pf-recurring-paid-overrides";
+  var REMOVED_KEY = "pf-recurring-removed-bills";
+
+  function yearMonthKey(y, m0) {
+    return y + "-" + String(m0 + 1).padStart(2, "0");
+  }
+
+  function loadPaidOverrides() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
     }
+  }
+
+  function savePaidOverrides(obj) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+    } catch (e) {
+      /* quota / private mode */
+    }
+  }
+
+  function setManualPaidForMonth(y, m0, name, paid) {
+    var all = loadPaidOverrides();
+    var k = yearMonthKey(y, m0);
+    if (!all[k]) all[k] = {};
+    if (paid) {
+      all[k][name] = true;
+    } else {
+      delete all[k][name];
+      if (Object.keys(all[k]).length === 0) delete all[k];
+    }
+    savePaidOverrides(all);
+  }
+
+  function stripManualPaidForName(name) {
+    var all = loadPaidOverrides();
+    var changed = false;
+    for (var k in all) {
+      if (all[k] && all[k][name]) {
+        delete all[k][name];
+        changed = true;
+        if (Object.keys(all[k]).length === 0) delete all[k];
+      }
+    }
+    if (changed) savePaidOverrides(all);
+  }
+
+  function loadRemovedBillNames() {
+    try {
+      var raw = localStorage.getItem(REMOVED_KEY);
+      if (!raw) return new Set();
+      var arr = JSON.parse(raw);
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function saveRemovedBillNames(set) {
+    try {
+      localStorage.setItem(REMOVED_KEY, JSON.stringify(Array.from(set)));
+    } catch (e) {
+      /* quota / private mode */
+    }
+  }
+
+  var BILL_PROPS_KEY = "pf-recurring-bill-props";
+
+  function loadBillProps() {
+    try {
+      var raw = localStorage.getItem(BILL_PROPS_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveBillProps(all) {
+    try {
+      localStorage.setItem(BILL_PROPS_KEY, JSON.stringify(all));
+    } catch (e) {
+      /* quota / private mode */
+    }
+  }
+
+  function stripBillPropsForName(name) {
+    var all = loadBillProps();
+    if (!all[name]) return;
+    delete all[name];
+    saveBillProps(all);
+  }
+
+  function effectiveDisplayName(template) {
+    var p = loadBillProps()[template.name];
+    if (p && p.displayName && String(p.displayName).trim()) {
+      return String(p.displayName).trim();
+    }
+    return template.name;
+  }
+
+  function effectiveAmount(template) {
+    var p = loadBillProps()[template.name];
+    if (
+      p &&
+      typeof p.amount === "number" &&
+      !isNaN(p.amount) &&
+      p.amount >= 0
+    ) {
+      return p.amount;
+    }
+    return Math.abs(template.amount);
+  }
+
+  function effectiveDueDay(template) {
+    var p = loadBillProps()[template.name];
+    if (
+      p &&
+      typeof p.dueDay === "number" &&
+      p.dueDay >= 1 &&
+      p.dueDay <= 31
+    ) {
+      return p.dueDay;
+    }
+    return parseISO(template.date).getUTCDate();
+  }
+
+  function dayOrdinalFromDay(day) {
+    var j = day % 10;
+    var k = day % 100;
+    if (j === 1 && k !== 11) return day + "st";
+    if (j === 2 && k !== 12) return day + "nd";
+    if (j === 3 && k !== 13) return day + "rd";
+    return day + "th";
+  }
+
+  function persistBillProps(canonicalName, template, fields) {
+    var all = loadBillProps();
+    var entry = {};
+    var baseAmount = Math.abs(template.amount);
+    var baseDay = parseISO(template.date).getUTCDate();
+
+    var dn = String(fields.displayName || "").trim();
+    if (dn && dn !== canonicalName) {
+      entry.displayName = dn;
+    }
+
+    var am = fields.amount;
+    if (typeof am === "number" && !isNaN(am) && am >= 0) {
+      if (Math.abs(am - baseAmount) >= 0.005) {
+        entry.amount = am;
+      }
+    }
+
+    var dd = fields.dueDay;
+    if (typeof dd === "number" && !isNaN(dd) && dd >= 1 && dd <= 31) {
+      if (dd !== baseDay) {
+        entry.dueDay = dd;
+      }
+    }
+
+    if (Object.keys(entry).length === 0) {
+      delete all[canonicalName];
+    } else {
+      all[canonicalName] = entry;
+    }
+    saveBillProps(all);
+  }
+
+  function addRemovedBillName(name) {
+    var s = loadRemovedBillNames();
+    s.add(name);
+    saveRemovedBillNames(s);
+    stripManualPaidForName(name);
+    stripBillPropsForName(name);
+  }
+
+  function recurringTemplatesVisible(transactions, removedSet) {
     return uniqueRecurringLatest(transactions).filter(function (v) {
-      return !paidNames.has(v.name);
+      return !removedSet.has(v.name);
+    });
+  }
+
+  function hasRecurringPaymentTx(transactions, name, y, m0) {
+    var paid = paidRecurringInMonth(transactions, y, m0);
+    for (var i = 0; i < paid.length; i++) {
+      if (paid[i].name === name) return true;
+    }
+    return false;
+  }
+
+  function unpaidTemplatesForPaidSet(transactions, paidSet, removedSet) {
+    var templates = recurringTemplatesVisible(transactions, removedSet);
+    return templates.filter(function (v) {
+      return !paidSet.has(v.name);
     });
   }
 
@@ -124,8 +313,15 @@
     return d;
   }
 
-  function dueSoonStats(transactions, referenceDate, year, monthIndex) {
-    var unpaid = unpaidRecurringForMonth(transactions, year, monthIndex);
+  function dueSoonStats(
+    transactions,
+    referenceDate,
+    year,
+    monthIndex,
+    paidSet,
+    removedSet
+  ) {
+    var unpaid = unpaidTemplatesForPaidSet(transactions, paidSet, removedSet);
     var start = addUTCDays(referenceDate, 1);
     start.setUTCHours(0, 0, 0, 0);
     var end = addUTCDays(referenceDate, 5);
@@ -135,11 +331,12 @@
     var sum = 0;
     for (var i = 0; i < unpaid.length; i++) {
       var v = unpaid[i];
-      var dueDay = parseISO(v.date).getUTCDate();
+      var dueDay = effectiveDueDay(v);
+      var amt = effectiveAmount(v);
       var due = new Date(Date.UTC(year, monthIndex, dueDay));
       if (due >= start && due <= end) {
         count += 1;
-        sum += Math.abs(v.amount);
+        sum += amt;
       }
     }
     return { count: count, sum: sum };
@@ -147,16 +344,6 @@
 
   function categoryAccent(cat) {
     return CATEGORY_ACCENT[cat] || "#277C78";
-  }
-
-  function dayOrdinalUTC(iso) {
-    var day = parseISO(iso).getUTCDate();
-    var j = day % 10;
-    var k = day % 100;
-    if (j === 1 && k !== 11) return day + "st";
-    if (j === 2 && k !== 12) return day + "nd";
-    if (j === 3 && k !== 13) return day + "rd";
-    return day + "th";
   }
 
   function formatSummaryLine(count, sum) {
@@ -178,6 +365,21 @@
     var searchInput = document.getElementById("recurring-search");
     var sortSelect = document.getElementById("recurring-sort");
 
+    var billDialog = document.getElementById("recurring-bill-dialog");
+    var billDialogClose = document.getElementById("recurring-bill-dialog-close");
+    var billForm = document.getElementById("recurring-bill-form");
+    var billCanonical = document.getElementById("recurring-bill-canonical");
+    var billDisplayName = document.getElementById("recurring-bill-display-name");
+    var billAmount = document.getElementById("recurring-bill-amount");
+    var billDueDay = document.getElementById("recurring-bill-dueday");
+    var billNameErr = document.getElementById("recurring-bill-name-err");
+    var billAmountErr = document.getElementById("recurring-bill-amount-err");
+    var billDueErr = document.getElementById("recurring-bill-dueday-err");
+    var billDialogTitle = document.getElementById("recurring-bill-dialog-title");
+    var billPeriodLabel = document.getElementById("recurring-bill-period-label");
+    var billPaidAction = document.getElementById("recurring-bill-paid-action");
+    var billRemoveBtn = document.getElementById("recurring-bill-remove");
+
     var viewYear = 2024;
     var viewMonth = 7;
 
@@ -191,12 +393,26 @@
     var budgetsData = [];
     var templateRows = [];
     var paidNameSet = new Set();
+    var removedNameSet = new Set();
+    var modalTemplateRef = null;
 
     function computePaidNames(transactions) {
+      var visibleNames = new Set();
+      var vis = recurringTemplatesVisible(transactions, removedNameSet);
+      for (var vi = 0; vi < vis.length; vi++) {
+        visibleNames.add(vis[vi].name);
+      }
       var set = new Set();
       var paid = paidRecurringInMonth(transactions, viewYear, viewMonth);
       for (var i = 0; i < paid.length; i++) {
-        set.add(paid[i].name);
+        var nm = paid[i].name;
+        if (visibleNames.has(nm)) set.add(nm);
+      }
+      var overrides = loadPaidOverrides()[yearMonthKey(viewYear, viewMonth)];
+      if (overrides) {
+        for (var name in overrides) {
+          if (overrides[name] && visibleNames.has(name)) set.add(name);
+        }
       }
       return set;
     }
@@ -257,31 +473,27 @@
       var arr = rows.slice();
       if (key === "latest") {
         arr.sort(function (a, b) {
-          return (
-            parseISO(a.date).getUTCDate() - parseISO(b.date).getUTCDate()
-          );
+          return effectiveDueDay(a) - effectiveDueDay(b);
         });
       } else if (key === "oldest") {
         arr.sort(function (a, b) {
-          return (
-            parseISO(b.date).getUTCDate() - parseISO(a.date).getUTCDate()
-          );
+          return effectiveDueDay(b) - effectiveDueDay(a);
         });
       } else if (key === "az") {
         arr.sort(function (a, b) {
-          return a.name.localeCompare(b.name);
+          return effectiveDisplayName(a).localeCompare(effectiveDisplayName(b));
         });
       } else if (key === "za") {
         arr.sort(function (a, b) {
-          return b.name.localeCompare(a.name);
+          return effectiveDisplayName(b).localeCompare(effectiveDisplayName(a));
         });
       } else if (key === "highest") {
         arr.sort(function (a, b) {
-          return Math.abs(b.amount) - Math.abs(a.amount);
+          return effectiveAmount(b) - effectiveAmount(a);
         });
       } else if (key === "lowest") {
         arr.sort(function (a, b) {
-          return Math.abs(a.amount) - Math.abs(b.amount);
+          return effectiveAmount(a) - effectiveAmount(b);
         });
       }
       return arr;
@@ -291,36 +503,53 @@
       if (!q || !q.trim()) return rows.slice();
       var needle = q.trim().toLowerCase();
       return rows.filter(function (r) {
-        return r.name.toLowerCase().indexOf(needle) !== -1;
+        var canon = r.name.toLowerCase();
+        var disp = effectiveDisplayName(r).toLowerCase();
+        return canon.indexOf(needle) !== -1 || disp.indexOf(needle) !== -1;
       });
     }
 
     function updateSummary(transactions) {
-      var templates = uniqueRecurringLatest(transactions);
+      var templates = recurringTemplatesVisible(transactions, removedNameSet);
       var totalSum = 0;
       for (var i = 0; i < templates.length; i++) {
-        totalSum += Math.abs(templates[i].amount);
+        totalSum += effectiveAmount(templates[i]);
       }
       if (totalEl) totalEl.textContent = currency.format(totalSum);
 
-      var paidTx = paidRecurringInMonth(transactions, viewYear, viewMonth);
+      var paidCount = 0;
       var paidSum = 0;
-      for (var p = 0; p < paidTx.length; p++) {
-        paidSum += Math.abs(paidTx[p].amount);
+      for (var pi = 0; pi < templates.length; pi++) {
+        var tpl = templates[pi];
+        if (paidNameSet.has(tpl.name)) {
+          paidCount++;
+          paidSum += effectiveAmount(tpl);
+        }
       }
       if (paidEl)
-        paidEl.textContent = formatSummaryLine(paidTx.length, paidSum);
+        paidEl.textContent = formatSummaryLine(paidCount, paidSum);
 
-      var unpaid = unpaidRecurringForMonth(transactions, viewYear, viewMonth);
+      var unpaid = unpaidTemplatesForPaidSet(
+        transactions,
+        paidNameSet,
+        removedNameSet
+      );
       var upcomingSum = 0;
       for (var u = 0; u < unpaid.length; u++) {
-        upcomingSum += Math.abs(unpaid[u].amount);
+        upcomingSum += effectiveAmount(unpaid[u]);
       }
       if (upcomingEl)
         upcomingEl.textContent = formatSummaryLine(unpaid.length, upcomingSum);
 
       var refDate = latestTransactionDate(transactions);
-      var ds = dueSoonStats(transactions, refDate, viewYear, viewMonth);
+      var ds = dueSoonStats(
+        transactions,
+        refDate,
+        viewYear,
+        viewMonth,
+        paidNameSet,
+        removedNameSet
+      );
       if (dueEl)
         dueEl.textContent = formatSummaryLine(ds.count, ds.sum);
     }
@@ -341,7 +570,10 @@
         var tdEmpty = document.createElement("td");
         tdEmpty.colSpan = 3;
         tdEmpty.className = "recurring-empty";
-        tdEmpty.textContent = "No recurring bills match your search.";
+        tdEmpty.textContent =
+          templateRows.length === 0
+            ? "No recurring bills to display."
+            : "No recurring bills match your search.";
         trEmpty.appendChild(tdEmpty);
         tbody.appendChild(trEmpty);
         return;
@@ -376,12 +608,23 @@
         })(img, marker, categoryAccent(row.category), row.name, row.category);
         marker.appendChild(img);
 
-        var title = document.createElement("p");
-        title.className = "recurring-row__title";
-        title.textContent = row.name;
+        var titleBtn = document.createElement("button");
+        titleBtn.type = "button";
+        titleBtn.className = "recurring-row__title-btn";
+        titleBtn.textContent = effectiveDisplayName(row);
+        titleBtn.setAttribute(
+          "aria-label",
+          "Edit bill: " + effectiveDisplayName(row)
+        );
+        (function (tpl) {
+          titleBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            openBillDialog(tpl);
+          });
+        })(row);
 
         billWrap.appendChild(marker);
-        billWrap.appendChild(title);
+        billWrap.appendChild(titleBtn);
         tdBill.appendChild(billWrap);
 
         var tdDue = document.createElement("td");
@@ -390,7 +633,7 @@
         var dueTxt = document.createElement("p");
         dueTxt.className = "recurring-row__due-text";
         dueTxt.textContent =
-          "Monthly-" + dayOrdinalUTC(row.date);
+          "Monthly-" + dayOrdinalFromDay(effectiveDueDay(row));
 
         dueWrap.appendChild(dueTxt);
         if (paidNameSet.has(row.name)) {
@@ -407,7 +650,7 @@
         var tdAmt = document.createElement("td");
         var amt = document.createElement("p");
         amt.className = "recurring-row__amount";
-        amt.textContent = currency.format(Math.abs(row.amount));
+        amt.textContent = currency.format(effectiveAmount(row));
         tdAmt.appendChild(amt);
 
         tr.appendChild(tdBill);
@@ -418,10 +661,187 @@
     }
 
     function refresh() {
+      removedNameSet = loadRemovedBillNames();
+      templateRows = recurringTemplatesVisible(
+        allTransactions,
+        removedNameSet
+      );
       paidNameSet = computePaidNames(allTransactions);
       renderMonthNav();
       updateSummary(allTransactions);
       renderTable();
+    }
+
+    function hideBillFormErrors() {
+      var els = [billNameErr, billAmountErr, billDueErr];
+      for (var ei = 0; ei < els.length; ei++) {
+        var el = els[ei];
+        if (el) {
+          el.hidden = true;
+          el.textContent = "";
+        }
+      }
+    }
+
+    function syncModalPaidBtn() {
+      if (!billPaidAction || !billCanonical) return;
+      var nm = billCanonical.value;
+      if (!nm) return;
+      var paidTx = hasRecurringPaymentTx(
+        allTransactions,
+        nm,
+        viewYear,
+        viewMonth
+      );
+      billPaidAction.disabled = false;
+      billPaidAction.classList.remove(
+        "recurring-bill-dialog__paid-btn--neutral",
+        "recurring-bill-dialog__paid-btn--undo"
+      );
+      if (paidTx) {
+        billPaidAction.disabled = true;
+        billPaidAction.textContent = "Recorded from transactions";
+        billPaidAction.classList.add("recurring-bill-dialog__paid-btn--neutral");
+        return;
+      }
+      var k = yearMonthKey(viewYear, viewMonth);
+      var mo = loadPaidOverrides()[k];
+      var manual = !!(mo && mo[nm]);
+      if (manual) {
+        billPaidAction.textContent = "Undo paid for this month";
+        billPaidAction.classList.add("recurring-bill-dialog__paid-btn--undo");
+      } else {
+        billPaidAction.textContent = "Mark paid for this month";
+      }
+    }
+
+    function closeBillDialog() {
+      if (billDialog && typeof billDialog.close === "function") {
+        billDialog.close();
+      }
+    }
+
+    function openBillDialog(template) {
+      if (!billDialog || typeof billDialog.showModal !== "function") return;
+      modalTemplateRef = template;
+      hideBillFormErrors();
+      billCanonical.value = template.name;
+      if (billDisplayName) {
+        billDisplayName.value = effectiveDisplayName(template);
+      }
+      if (billAmount) {
+        billAmount.value = effectiveAmount(template).toFixed(2);
+      }
+      if (billDueDay) {
+        billDueDay.value = String(effectiveDueDay(template));
+      }
+      if (billDialogTitle) {
+        billDialogTitle.textContent = effectiveDisplayName(template);
+      }
+      if (billPeriodLabel) {
+        billPeriodLabel.textContent = MONTH_SHORT[viewMonth] + " " + viewYear;
+      }
+      syncModalPaidBtn();
+      billDialog.showModal();
+      setTimeout(function () {
+        if (billDisplayName) billDisplayName.focus();
+      }, 0);
+    }
+
+    if (billDialog) {
+      billDialog.addEventListener("close", function () {
+        modalTemplateRef = null;
+      });
+    }
+
+    if (billDialogClose) {
+      billDialogClose.addEventListener("click", closeBillDialog);
+    }
+
+    if (billDialog) {
+      billDialog.addEventListener("click", function (e) {
+        if (e.target === billDialog) closeBillDialog();
+      });
+    }
+
+    if (billForm) {
+      billForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        hideBillFormErrors();
+        if (!modalTemplateRef || !billCanonical || !billCanonical.value) {
+          return;
+        }
+        var dn = billDisplayName ? billDisplayName.value.trim() : "";
+        if (!dn) {
+          if (billNameErr) {
+            billNameErr.textContent = "Enter a bill name.";
+            billNameErr.hidden = false;
+          }
+          return;
+        }
+        var amt = billAmount ? parseFloat(billAmount.value) : NaN;
+        if (isNaN(amt) || amt < 0) {
+          if (billAmountErr) {
+            billAmountErr.textContent = "Enter a valid amount (0 or more).";
+            billAmountErr.hidden = false;
+          }
+          return;
+        }
+        var dd = billDueDay ? parseInt(billDueDay.value, 10) : NaN;
+        if (isNaN(dd) || dd < 1 || dd > 31) {
+          if (billDueErr) {
+            billDueErr.textContent = "Enter a day from 1 to 31.";
+            billDueErr.hidden = false;
+          }
+          return;
+        }
+        persistBillProps(billCanonical.value, modalTemplateRef, {
+          displayName: dn,
+          amount: amt,
+          dueDay: dd,
+        });
+        closeBillDialog();
+        refresh();
+      });
+    }
+
+    if (billPaidAction) {
+      billPaidAction.addEventListener("click", function () {
+        if (!billCanonical) return;
+        var nm = billCanonical.value;
+        if (!nm || billPaidAction.disabled) return;
+        if (hasRecurringPaymentTx(allTransactions, nm, viewYear, viewMonth)) {
+          return;
+        }
+        var k = yearMonthKey(viewYear, viewMonth);
+        var mo = loadPaidOverrides()[k];
+        var manual = !!(mo && mo[nm]);
+        setManualPaidForMonth(viewYear, viewMonth, nm, !manual);
+        closeBillDialog();
+        refresh();
+      });
+    }
+
+    if (billRemoveBtn) {
+      billRemoveBtn.addEventListener("click", function () {
+        if (!billCanonical) return;
+        var nm = billCanonical.value;
+        var shown =
+          billDisplayName && billDisplayName.value.trim()
+            ? billDisplayName.value.trim()
+            : nm;
+        if (
+          !nm ||
+          !window.confirm(
+            'Remove "' + shown + '" from recurring bills for this browser?'
+          )
+        ) {
+          return;
+        }
+        addRemovedBillName(nm);
+        closeBillDialog();
+        refresh();
+      });
     }
 
     if (recurringMonthStrip) {
@@ -460,7 +880,6 @@
       .then(function (data) {
         allTransactions = data.transactions || [];
         budgetsData = data.budgets || [];
-        templateRows = uniqueRecurringLatest(allTransactions);
         refresh();
         main.removeAttribute("aria-busy");
       })

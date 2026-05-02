@@ -123,6 +123,62 @@
     return Array.from(map.values());
   }
 
+  var REMOVED_RECURRING_KEY = "pf-recurring-removed-bills";
+  var BILL_PROPS_KEY = "pf-recurring-bill-props";
+
+  function loadBillPropsOverview() {
+    try {
+      var raw = localStorage.getItem(BILL_PROPS_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function effectiveAmountOverview(template) {
+    var p = loadBillPropsOverview()[template.name];
+    if (
+      p &&
+      typeof p.amount === "number" &&
+      !isNaN(p.amount) &&
+      p.amount >= 0
+    ) {
+      return p.amount;
+    }
+    return Math.abs(template.amount);
+  }
+
+  function effectiveDueDayOverview(template) {
+    var p = loadBillPropsOverview()[template.name];
+    if (
+      p &&
+      typeof p.dueDay === "number" &&
+      p.dueDay >= 1 &&
+      p.dueDay <= 31
+    ) {
+      return p.dueDay;
+    }
+    return parseISO(template.date).getUTCDate();
+  }
+
+  function loadRemovedRecurringBillNames() {
+    try {
+      var raw = localStorage.getItem(REMOVED_RECURRING_KEY);
+      if (!raw) return new Set();
+      var arr = JSON.parse(raw);
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function recurringTemplatesVisibleForOverview(transactions) {
+    var removed = loadRemovedRecurringBillNames();
+    return uniqueRecurringLatest(transactions).filter(function (v) {
+      return !removed.has(v.name);
+    });
+  }
+
   function paidRecurringInMonth(transactions, year, monthIndex) {
     var out = [];
     for (var i = 0; i < transactions.length; i++) {
@@ -141,16 +197,24 @@
     for (var i = 0; i < paid.length; i++) {
       paidNames.add(paid[i].name);
     }
-    return uniqueRecurringLatest(transactions).filter(function (v) {
+    var visible = recurringTemplatesVisibleForOverview(transactions);
+    return visible.filter(function (v) {
       return !paidNames.has(v.name);
     });
   }
 
   function recurringPaidSumForMonth(transactions, year, monthIndex) {
+    var visibleNames = new Set();
+    var vis = recurringTemplatesVisibleForOverview(transactions);
+    for (var i = 0; i < vis.length; i++) {
+      visibleNames.add(vis[i].name);
+    }
     var paid = paidRecurringInMonth(transactions, year, monthIndex);
     var sum = 0;
     for (var i = 0; i < paid.length; i++) {
-      sum += Math.abs(paid[i].amount);
+      if (visibleNames.has(paid[i].name)) {
+        sum += Math.abs(paid[i].amount);
+      }
     }
     return sum;
   }
@@ -159,7 +223,7 @@
     var unpaid = unpaidRecurringForMonth(transactions, year, monthIndex);
     var sum = 0;
     for (var i = 0; i < unpaid.length; i++) {
-      sum += Math.abs(unpaid[i].amount);
+      sum += effectiveAmountOverview(unpaid[i]);
     }
     return sum;
   }
@@ -179,10 +243,10 @@
     var sum = 0;
     for (var i = 0; i < unpaid.length; i++) {
       var v = unpaid[i];
-      var dueDay = parseISO(v.date).getUTCDate();
+      var dueDay = effectiveDueDayOverview(v);
       var due = new Date(Date.UTC(year, monthIndex, dueDay));
       if (due >= start && due <= end) {
-        sum += Math.abs(v.amount);
+        sum += effectiveAmountOverview(v);
       }
     }
     return sum;

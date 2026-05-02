@@ -238,14 +238,32 @@
   color: #fff;
 }
 
-.recurring-row__title {
+.recurring-row__title-btn {
   margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--color-heading);
+  text-align: left;
+  cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+  border-radius: 0.25rem;
+}
+
+.recurring-row__title-btn:hover {
+  color: var(--color-accent-green);
+}
+
+.recurring-row__title-btn:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 2px;
 }
 
 .recurring-row__due-cell {
@@ -288,4 +306,86 @@
   background-color: var(--color-error-bg);
   color: var(--color-heading);
   font-size: 0.875rem;
+}
+
+.recurring-bill-dialog__secondary {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-divider);
+}
+
+.recurring-bill-dialog__secondary-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.recurring-bill-dialog__secondary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.recurring-bill-dialog__paid-btn {
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--color-divider);
+  border-radius: 0.5rem;
+  background-color: transparent;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-accent-green);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.recurring-bill-dialog__paid-btn:hover:not(:disabled) {
+  background-color: var(--color-subtle-fill);
+  border-color: var(--color-text-muted);
+}
+
+.recurring-bill-dialog__paid-btn:focus-visible {
+  outline: 2px solid var(--color-accent-green);
+  outline-offset: 2px;
+}
+
+.recurring-bill-dialog__paid-btn--undo {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.recurring-bill-dialog__paid-btn--neutral {
+  cursor: default;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.recurring-bill-dialog__paid-btn--neutral:hover {
+  background-color: transparent;
+  border-color: var(--color-divider);
+}
+
+.recurring-bill-dialog__remove-btn {
+  padding: 0.65rem 1rem;
+  border: 1px solid #c94736;
+  border-radius: 0.5rem;
+  background-color: transparent;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #c94736;
+  cursor: pointer;
+}
+
+.recurring-bill-dialog__remove-btn:hover {
+  background-color: rgba(201, 71, 54, 0.08);
+}
+
+.recurring-bill-dialog__remove-btn:focus-visible {
+  outline: 2px solid #c94736;
+  outline-offset: 2px;
 }
