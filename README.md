@@ -54,10 +54,10 @@ Your users should be able to:
   - The filter is by transaction category, which are: Entertainment, Bills, Groceries, Dining Out, Transportation, Personal Care, Education, Lifestyle, Shopping, General. Filtering by category should only show transactions from the selected category.
 - Budgets
   - Don't worry if you can't create a donut pie chart exactly like in the design. Do your best to get close, but feel free to go in your own direction.
-  - The "Spent" amount should calculate the money spent within the category for the current month (August 2024 in the app).
+  - The "Spent" amount should calculate the money spent within the category for the current month (August 2026 in the app).
   - The "Latest Spending" component should display the three last transactions for that category regardless of the month.
   - Clicking "See All" on a budget should navigate to the Transactions page with the filter set to the relevant category. For example, clicking "See All" on Entertainment should only show transactions with the Entertainment category.
-  - Adding a new budget should automatically pull in the three latest transactions from the created budget category and calculate the amount spent so far for August 2024.
+  - Adding a new budget should automatically pull in the three latest transactions from the created budget category and calculate the amount spent so far for August 2026.
   - Deleting a budget should remove it from the Budgets page and the Overview.
 - Pots
   - Adding money to a pot should deduct the given amount from the current balance (seen on the Overview page).
@@ -65,8 +65,8 @@ Your users should be able to:
   - Deleting a pot should return all the money from the pot to the current balance.
 - Recurring Bills
   - List out all the recurring transactions and ensure only one item is shown per vendor.
-  - Show the recurring transactions that have already been paid for August 2024.
-  - Show the payments due to be paid soon based on their monthly payment date. Calculate this from recurring transactions yet to be paid for August 2024, but due within five days of the latest overall transaction in the app (Emma Richardson - 19 August 2024).
+  - Show the recurring transactions that have already been paid for August 2026.
+  - Show the payments due to be paid soon based on their monthly payment date. Calculate this from recurring transactions yet to be paid for August 2026, but due within five days of the latest overall transaction in the app (Emma Richardson - 19 August 2026).
   - The search should search based on name.
   - The sorting options include: Latest (earliest in the month), Oldest, A to Z, Z to A, Highest (transaction amount), Lowest.
 

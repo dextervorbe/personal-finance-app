@@ -232,7 +232,7 @@
 
   function customBillToTemplate(c) {
     var day = Math.max(1, Math.min(31, Number(c.dueDay)));
-    var d = new Date(Date.UTC(2024, 7, day));
+    var d = new Date(Date.UTC(2026, 7, day));
     return {
       name: "__pf_custom_" + c.id,
       amount: -Math.abs(Number(c.amount)),
@@ -502,7 +502,7 @@
     var recurringAddDueErr = document.getElementById("recurring-add-dueday-err");
     var recurringAddAmountErr = document.getElementById("recurring-add-amount-err");
 
-    var viewYear = 2024;
+    var viewYear = 2026;
     var viewMonth = 7;
 
     var monthAriaFmt = new Intl.DateTimeFormat("en-US", {

@@ -160,9 +160,9 @@
     return (n < 10 ? "0" : "") + n;
   }
 
-  var TX_DELETED_KEY = "pf-tx-deleted-ids";
-  var TX_OVERRIDES_KEY = "pf-tx-overrides";
-  var TX_ADDED_KEY = "pf-tx-user-added";
+  var TX_DELETED_KEY = "pf-cc-tx-deleted-ids";
+  var TX_OVERRIDES_KEY = "pf-cc-tx-overrides";
+  var TX_ADDED_KEY = "pf-cc-tx-user-added";
 
   function loadDeletedIds() {
     try {
@@ -219,7 +219,7 @@
 
   function newUserTxId() {
     return (
-      "tx-u-" +
+      "cc-u-" +
       Date.now().toString(36) +
       "-" +
       Math.random().toString(36).replace(/[^a-z0-9]/gi, "").slice(0, 10)
@@ -257,7 +257,7 @@
 
     var jsonPart = (jsonTransactions || [])
       .map(function (t, i) {
-        var id = "tx-b-" + i;
+        var id = "cc-b-" + i;
         if (deleted.has(id)) return null;
         var tx = {
           avatar: t.avatar,
@@ -485,37 +485,37 @@
     var main = document.querySelector(".transactions-page");
     if (!main) return;
 
-    var tbody = document.getElementById("transactions-tbody");
-    var emptyEl = document.getElementById("transactions-empty");
-    var searchEl = document.getElementById("tx-search");
-    var sortEl = document.getElementById("tx-sort");
-    var catEl = document.getElementById("tx-category");
-    var prevBtn = document.getElementById("tx-prev");
-    var nextBtn = document.getElementById("tx-next");
-    var pagesEl = document.getElementById("tx-pages");
-    var pagNav = document.getElementById("tx-pagination");
+    var tbody = document.getElementById("cc-tbody");
+    var emptyEl = document.getElementById("cc-empty");
+    var searchEl = document.getElementById("cc-search");
+    var sortEl = document.getElementById("cc-sort");
+    var catEl = document.getElementById("cc-category");
+    var prevBtn = document.getElementById("cc-prev");
+    var nextBtn = document.getElementById("cc-next");
+    var pagesEl = document.getElementById("cc-pages");
+    var pagNav = document.getElementById("cc-pagination");
 
-    var addOpenBtn = document.getElementById("tx-add-open");
-    var addDialog = document.getElementById("tx-add-dialog");
-    var addForm = document.getElementById("tx-add-form");
-    var modalCloseBtn = document.getElementById("tx-modal-close");
-    var addName = document.getElementById("tx-add-name");
-    var addNameCount = document.getElementById("tx-add-name-count");
-    var addNameErr = document.getElementById("tx-add-name-err");
-    var addDate = document.getElementById("tx-add-date");
-    var addDateDisplay = document.getElementById("tx-add-date-display");
-    var addDateErr = document.getElementById("tx-add-date-err");
-    var addAmount = document.getElementById("tx-add-amount");
-    var addAmountErr = document.getElementById("tx-add-amount-err");
-    var addRecurring = document.getElementById("tx-add-recurring");
+    var addOpenBtn = document.getElementById("cc-add-open");
+    var addDialog = document.getElementById("cc-add-dialog");
+    var addForm = document.getElementById("cc-add-form");
+    var modalCloseBtn = document.getElementById("cc-modal-close");
+    var addName = document.getElementById("cc-add-name");
+    var addNameCount = document.getElementById("cc-add-name-count");
+    var addNameErr = document.getElementById("cc-add-name-err");
+    var addDate = document.getElementById("cc-add-date");
+    var addDateDisplay = document.getElementById("cc-add-date-display");
+    var addDateErr = document.getElementById("cc-add-date-err");
+    var addAmount = document.getElementById("cc-add-amount");
+    var addAmountErr = document.getElementById("cc-add-amount-err");
+    var addRecurring = document.getElementById("cc-add-recurring");
 
-    var dateWrap = document.querySelector(".tx-modal-field-date-wrap");
-    var txDateTrigger = document.getElementById("tx-date-trigger");
-    var txDateCalendar = document.getElementById("tx-date-calendar");
-    var txCalTitle = document.getElementById("tx-cal-title");
-    var txCalGrid = document.getElementById("tx-cal-grid");
-    var txCalPrev = document.getElementById("tx-cal-prev");
-    var txCalNext = document.getElementById("tx-cal-next");
+    var dateWrap = document.querySelector(".cc-modal-field-date-wrap");
+    var txDateTrigger = document.getElementById("cc-date-trigger");
+    var txDateCalendar = document.getElementById("cc-date-calendar");
+    var txCalTitle = document.getElementById("cc-cal-title");
+    var txCalGrid = document.getElementById("cc-cal-grid");
+    var txCalPrev = document.getElementById("cc-cal-prev");
+    var txCalNext = document.getElementById("cc-cal-next");
 
     var calendarOpen = false;
     var viewYear = new Date().getFullYear();
@@ -527,8 +527,8 @@
     var currentPage = 1;
     var pendingDeleteTxId = null;
 
-    var txMonthYear = document.getElementById("tx-month-year");
-    var txMonthStrip = document.getElementById("tx-month-strip");
+    var txMonthYear = document.getElementById("cc-month-year");
+    var txMonthStrip = document.getElementById("cc-month-strip");
     var monthNavYear = 2026;
     var monthNavMonth = 7;
 
@@ -538,25 +538,25 @@
       timeZone: "UTC",
     });
 
-    var editDialog = document.getElementById("tx-edit-dialog");
-    var editCloseBtn = document.getElementById("tx-edit-close");
-    var editForm = document.getElementById("tx-edit-form");
-    var editId = document.getElementById("tx-edit-id");
-    var editName = document.getElementById("tx-edit-name");
-    var editCategory = document.getElementById("tx-edit-category");
-    var editDate = document.getElementById("tx-edit-date");
-    var editAmount = document.getElementById("tx-edit-amount");
-    var editNameErr = document.getElementById("tx-edit-name-err");
-    var editDateErr = document.getElementById("tx-edit-date-err");
-    var editAmountErr = document.getElementById("tx-edit-amount-err");
-    var editRemoveBtn = document.getElementById("tx-edit-remove");
+    var editDialog = document.getElementById("cc-edit-dialog");
+    var editCloseBtn = document.getElementById("cc-edit-close");
+    var editForm = document.getElementById("cc-edit-form");
+    var editId = document.getElementById("cc-edit-id");
+    var editName = document.getElementById("cc-edit-name");
+    var editCategory = document.getElementById("cc-edit-category");
+    var editDate = document.getElementById("cc-edit-date");
+    var editAmount = document.getElementById("cc-edit-amount");
+    var editNameErr = document.getElementById("cc-edit-name-err");
+    var editDateErr = document.getElementById("cc-edit-date-err");
+    var editAmountErr = document.getElementById("cc-edit-amount-err");
+    var editRemoveBtn = document.getElementById("cc-edit-remove");
 
-    var deleteDialog = document.getElementById("tx-delete-dialog");
-    var deleteCloseBtn = document.getElementById("tx-delete-close");
-    var deleteYesBtn = document.getElementById("tx-delete-yes");
-    var deleteNoBtn = document.getElementById("tx-delete-no");
-    var deleteTitleEl = document.getElementById("tx-delete-title");
-    var deleteLedeEl = document.getElementById("tx-delete-lede");
+    var deleteDialog = document.getElementById("cc-delete-dialog");
+    var deleteCloseBtn = document.getElementById("cc-delete-close");
+    var deleteYesBtn = document.getElementById("cc-delete-yes");
+    var deleteNoBtn = document.getElementById("cc-delete-no");
+    var deleteTitleEl = document.getElementById("cc-delete-title");
+    var deleteLedeEl = document.getElementById("cc-delete-lede");
 
     var params = new URLSearchParams(window.location.search);
     var fromUrl = normalizeQueryCategory(params.get("category"));
@@ -638,7 +638,7 @@
       delete ovs[id];
       saveOverrides(ovs);
 
-      if (id.indexOf("tx-u-") === 0) {
+      if (id.indexOf("cc-u-") === 0) {
         saveAddedTransactions(
           loadAddedTransactions().filter(function (t) {
             return t.__txId !== id;
@@ -672,7 +672,7 @@
         "aria-label",
         isActive
           ? ariaBase + ", selected"
-          : "Show transactions for " + ariaBase
+          : "Show credit card transactions for " + ariaBase
       );
       if (isActive) {
         btn.setAttribute("aria-current", "date");
@@ -1082,7 +1082,7 @@
 
         if (!ok) return;
 
-        var cat = document.getElementById("tx-add-category").value;
+        var cat = document.getElementById("cc-add-category").value;
         var newTx = {
           __txId: newUserTxId(),
           avatar: "./assets/images/avatars/__new__.jpg",
@@ -1233,7 +1233,7 @@
         return res.json();
       })
       .then(function (data) {
-        jsonTransactionsCache = data.transactions || [];
+        jsonTransactionsCache = data.creditCardTransactions || [];
         budgetsData = data.budgets || [];
         rebuildAllFromCache();
         applyFilters();

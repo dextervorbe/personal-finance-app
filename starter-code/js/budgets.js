@@ -205,7 +205,7 @@
     var pendingDeleteIndex = null;
     var pendingEditIndex = null;
 
-    var viewYear = 2024;
+    var viewYear = 2026;
     var viewMonth = 7;
 
     var monthAriaFmt = new Intl.DateTimeFormat("en-US", {

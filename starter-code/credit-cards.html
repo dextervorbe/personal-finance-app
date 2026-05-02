@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="./css/budgets.css">
   <link rel="stylesheet" href="./css/transactions.css">
 
-  <title>Frontend Mentor | Personal finance app - Transactions</title>
+  <title>Frontend Mentor | Personal finance app - Credit Cards</title>
 </head>
 <body>
   <aside class="sidebar" id="app-sidebar" aria-label="Application">
@@ -35,7 +35,7 @@
             </a>
           </li>
           <li>
-            <a href="transactions.html" class="sidebar__link" aria-current="page">
+            <a href="transactions.html" class="sidebar__link">
               <span class="sidebar__icon">
                 <img class="sidebar__icon-img" src="./assets/images/icon-nav-transactions.svg" alt="" width="18" height="18">
               </span>
@@ -43,7 +43,7 @@
             </a>
           </li>
           <li>
-            <a href="credit-cards.html" class="sidebar__link">
+            <a href="credit-cards.html" class="sidebar__link" aria-current="page">
               <span class="sidebar__icon">
                 <img class="sidebar__icon-img" src="./assets/images/icon-nav-credit-cards.svg" alt="" width="18" height="18">
               </span>
@@ -103,16 +103,16 @@
     <main id="main-content" class="transactions-page" aria-busy="true">
       <header class="transactions-page__header">
         <div class="transactions-page__header-start">
-          <h1 class="transactions-page__title">Transactions</h1>
+          <h1 class="transactions-page__title">Credit Cards</h1>
         </div>
         <div class="transactions-page__header-mid">
-          <div class="budgets-month-nav" id="tx-month-nav">
+          <div class="budgets-month-nav" id="cc-month-nav">
             <div class="budgets-month-nav__year-wrap" aria-hidden="true">
               <span class="budgets-month-nav__year-rule"></span>
-              <span class="budgets-month-nav__year" id="tx-month-year"></span>
+              <span class="budgets-month-nav__year" id="cc-month-year"></span>
               <span class="budgets-month-nav__year-rule"></span>
             </div>
-            <div class="budgets-month-nav__strip month-nav-strip" id="tx-month-strip" role="group" aria-label="Transactions month">
+            <div class="budgets-month-nav__strip month-nav-strip" id="cc-month-strip" role="group" aria-label="Credit card transactions month">
               <button type="button" class="budgets-month-card">
                 <span class="budgets-month-card__chart" aria-hidden="true">
                   <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
@@ -166,24 +166,24 @@
           </div>
         </div>
         <div class="transactions-page__header-end">
-          <button type="button" class="transactions-add-btn" id="tx-add-open">+ Add New Transaction</button>
+          <button type="button" class="transactions-add-btn" id="cc-add-open">+ Add New Transaction</button>
         </div>
       </header>
 
-      <section class="transactions-panel" aria-labelledby="transactions-heading">
-        <h2 id="transactions-heading" class="visually-hidden">Transaction list</h2>
+      <section class="transactions-panel" aria-labelledby="cc-heading">
+        <h2 id="cc-heading" class="visually-hidden">Credit card transactions</h2>
 
         <div class="transactions-toolbar">
           <div class="transactions-search">
-            <label class="visually-hidden" for="tx-search">Search transactions</label>
-            <input type="search" id="tx-search" class="transactions-search__input" placeholder="Search transaction" autocomplete="off" spellcheck="false">
+            <label class="visually-hidden" for="cc-search">Search credit card transactions</label>
+            <input type="search" id="cc-search" class="transactions-search__input" placeholder="Search transaction" autocomplete="off" spellcheck="false">
             <img class="transactions-search__icon" src="./assets/images/icon-search.svg" alt="" width="14" height="14">
           </div>
 
           <div class="transactions-filters">
-            <label for="tx-sort">
+            <label for="cc-sort">
               Sort by
-              <select id="tx-sort" class="transactions-select">
+              <select id="cc-sort" class="transactions-select">
                 <option value="latest" selected>Latest</option>
                 <option value="oldest">Oldest</option>
                 <option value="az">A to Z</option>
@@ -192,10 +192,10 @@
                 <option value="lowest">Lowest</option>
               </select>
             </label>
-            <label for="tx-category">
+            <label for="cc-category">
               Category
-              <select id="tx-category" class="transactions-select">
-                <option value="">All Transactions</option>
+              <select id="cc-category" class="transactions-select">
+                <option value="">All categories</option>
                 <option value="Entertainment">Entertainment</option>
                 <option value="Bills">Bills</option>
                 <option value="Groceries">Groceries</option>
@@ -221,18 +221,18 @@
                 <th scope="col">Amount</th>
               </tr>
             </thead>
-            <tbody id="transactions-tbody"></tbody>
+            <tbody id="cc-tbody"></tbody>
           </table>
-          <p id="transactions-empty" class="transactions-empty" hidden>No transactions match your filters.</p>
+          <p id="cc-empty" class="transactions-empty" hidden>No transactions match your filters.</p>
         </div>
 
-        <nav class="transactions-pagination" id="tx-pagination" aria-label="Transaction pages">
-          <button type="button" class="pagination-nav-btn" id="tx-prev" aria-label="Previous page">
+        <nav class="transactions-pagination" id="cc-pagination" aria-label="Credit card transaction pages">
+          <button type="button" class="pagination-nav-btn" id="cc-prev" aria-label="Previous page">
             <img src="./assets/images/icon-caret-left.svg" alt="" width="6" height="11">
             Prev
           </button>
-          <div class="transactions-pagination__pages" id="tx-pages" role="group" aria-label="Page"></div>
-          <button type="button" class="pagination-nav-btn" id="tx-next" aria-label="Next page">
+          <div class="transactions-pagination__pages" id="cc-pages" role="group" aria-label="Page"></div>
+          <button type="button" class="pagination-nav-btn" id="cc-next" aria-label="Next page">
             Next
             <img src="./assets/images/icon-caret-right.svg" alt="" width="6" height="11">
           </button>
@@ -241,33 +241,33 @@
     </main>
   </div>
 
-  <dialog class="tx-modal" id="tx-add-dialog" aria-labelledby="tx-modal-title">
+  <dialog class="tx-modal" id="cc-add-dialog" aria-labelledby="cc-modal-title">
     <div class="tx-modal__surface">
       <header class="tx-modal__header">
         <div class="tx-modal__heading-block">
-          <h2 id="tx-modal-title" class="tx-modal__title">Add New Transaction</h2>
-          <p id="tx-modal-desc" class="tx-modal__desc">
+          <h2 id="cc-modal-title" class="tx-modal__title">Add New Transaction</h2>
+          <p id="cc-modal-desc" class="tx-modal__desc">
             Enter the details to add a new transaction and keep your finances up to date
           </p>
         </div>
-        <button type="button" class="tx-modal__close" id="tx-modal-close" aria-label="Close">
+        <button type="button" class="tx-modal__close" id="cc-modal-close" aria-label="Close">
           <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
         </button>
       </header>
 
-      <form class="tx-modal__form" id="tx-add-form" novalidate>
+      <form class="tx-modal__form" id="cc-add-form" novalidate>
         <div class="tx-modal__field">
-          <label class="tx-modal__label" for="tx-add-name">Name</label>
-          <input type="text" id="tx-add-name" class="tx-modal__input" maxlength="30" autocomplete="off" spellcheck="false" aria-describedby="tx-add-name-count tx-add-name-err">
+          <label class="tx-modal__label" for="cc-add-name">Name</label>
+          <input type="text" id="cc-add-name" class="tx-modal__input" maxlength="30" autocomplete="off" spellcheck="false" aria-describedby="cc-add-name-count cc-add-name-err">
           <div class="tx-modal__meta-row">
-            <span id="tx-add-name-err" class="tx-modal__error" role="alert" hidden></span>
-            <span id="tx-add-name-count" class="tx-modal__hint tx-modal__hint--count" aria-live="polite"></span>
+            <span id="cc-add-name-err" class="tx-modal__error" role="alert" hidden></span>
+            <span id="cc-add-name-count" class="tx-modal__hint tx-modal__hint--count" aria-live="polite"></span>
           </div>
         </div>
 
         <div class="tx-modal__field">
-          <label class="tx-modal__label" for="tx-add-category">Category</label>
-          <select id="tx-add-category" class="transactions-select tx-modal__select-full">
+          <label class="tx-modal__label" for="cc-add-category">Category</label>
+          <select id="cc-add-category" class="transactions-select tx-modal__select-full">
             <option value="Entertainment" selected>Entertainment</option>
             <option value="Bills">Bills</option>
             <option value="Groceries">Groceries</option>
@@ -281,59 +281,59 @@
           </select>
         </div>
 
-        <div class="tx-modal__field tx-modal-field-date-wrap">
-          <span class="tx-modal__label" id="tx-add-date-label">Transaction Date</span>
+        <div class="tx-modal__field cc-modal-field-date-wrap">
+          <span class="tx-modal__label" id="cc-add-date-label">Transaction Date</span>
           <button
             type="button"
             class="tx-modal-date tx-modal-date__trigger"
-            id="tx-date-trigger"
+            id="cc-date-trigger"
             aria-expanded="false"
             aria-haspopup="dialog"
-            aria-controls="tx-date-calendar"
-            aria-labelledby="tx-add-date-label"
-            aria-describedby="tx-add-date-err"
+            aria-controls="cc-date-calendar"
+            aria-labelledby="cc-add-date-label"
+            aria-describedby="cc-add-date-err"
           >
             <span class="tx-modal-date__icon" aria-hidden="true">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
                 <path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
               </svg>
             </span>
-            <span id="tx-add-date-display" class="tx-modal-date__display"></span>
+            <span id="cc-add-date-display" class="tx-modal-date__display"></span>
           </button>
-          <input type="hidden" id="tx-add-date" value="">
+          <input type="hidden" id="cc-add-date" value="">
           <div
             class="tx-cal"
-            id="tx-date-calendar"
+            id="cc-date-calendar"
             hidden
             role="dialog"
             aria-modal="true"
             aria-label="Choose transaction date"
           >
             <div class="tx-cal__header">
-              <button type="button" class="tx-cal__nav" id="tx-cal-prev" aria-label="Previous month">
+              <button type="button" class="tx-cal__nav" id="cc-cal-prev" aria-label="Previous month">
                 <span aria-hidden="true">&#8249;</span>
               </button>
-              <div class="tx-cal__title" id="tx-cal-title"></div>
-              <button type="button" class="tx-cal__nav" id="tx-cal-next" aria-label="Next month">
+              <div class="tx-cal__title" id="cc-cal-title"></div>
+              <button type="button" class="tx-cal__nav" id="cc-cal-next" aria-label="Next month">
                 <span aria-hidden="true">&#8250;</span>
               </button>
             </div>
             <div class="tx-cal__dow" aria-hidden="true">
               <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
             </div>
-            <div class="tx-cal__grid" id="tx-cal-grid"></div>
+            <div class="tx-cal__grid" id="cc-cal-grid"></div>
           </div>
-          <span id="tx-add-date-err" class="tx-modal__error" role="alert" hidden></span>
+          <span id="cc-add-date-err" class="tx-modal__error" role="alert" hidden></span>
         </div>
 
         <div class="tx-modal__field">
-          <label class="tx-modal__label" for="tx-add-amount">Amount</label>
-          <input type="number" id="tx-add-amount" class="tx-modal__input" inputmode="decimal" step="any" placeholder="0.00" aria-describedby="tx-add-amount-err">
-          <span id="tx-add-amount-err" class="tx-modal__error" role="alert" hidden></span>
+          <label class="tx-modal__label" for="cc-add-amount">Amount</label>
+          <input type="number" id="cc-add-amount" class="tx-modal__input" inputmode="decimal" step="any" placeholder="0.00" aria-describedby="cc-add-amount-err">
+          <span id="cc-add-amount-err" class="tx-modal__error" role="alert" hidden></span>
         </div>
 
         <label class="tx-modal__check">
-          <input type="checkbox" id="tx-add-recurring" name="recurring">
+          <input type="checkbox" id="cc-add-recurring" name="recurring">
           <span class="tx-modal__check-label">Recurring</span>
         </label>
 
@@ -342,30 +342,30 @@
     </div>
   </dialog>
 
-  <dialog class="tx-modal" id="tx-edit-dialog" aria-labelledby="tx-edit-title">
+  <dialog class="tx-modal" id="cc-edit-dialog" aria-labelledby="cc-edit-title">
     <div class="tx-modal__surface">
       <header class="tx-modal__header">
         <div class="tx-modal__heading-block">
-          <h2 id="tx-edit-title" class="tx-modal__title">Edit transaction</h2>
+          <h2 id="cc-edit-title" class="tx-modal__title">Edit transaction</h2>
           <p class="tx-modal__desc">Update the details for this transaction. Changes are stored in this browser only.</p>
         </div>
-        <button type="button" class="tx-modal__close" id="tx-edit-close" aria-label="Close">
+        <button type="button" class="tx-modal__close" id="cc-edit-close" aria-label="Close">
           <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
         </button>
       </header>
 
-      <form class="tx-modal__form" id="tx-edit-form" novalidate>
-        <input type="hidden" id="tx-edit-id" name="txId" value="">
+      <form class="tx-modal__form" id="cc-edit-form" novalidate>
+        <input type="hidden" id="cc-edit-id" name="txId" value="">
 
         <div class="tx-modal__field">
-          <label class="tx-modal__label" for="tx-edit-name">Name</label>
-          <input type="text" id="tx-edit-name" class="tx-modal__input" maxlength="30" autocomplete="off" spellcheck="false" aria-describedby="tx-edit-name-err">
-          <span id="tx-edit-name-err" class="tx-modal__error" role="alert" hidden></span>
+          <label class="tx-modal__label" for="cc-edit-name">Name</label>
+          <input type="text" id="cc-edit-name" class="tx-modal__input" maxlength="30" autocomplete="off" spellcheck="false" aria-describedby="cc-edit-name-err">
+          <span id="cc-edit-name-err" class="tx-modal__error" role="alert" hidden></span>
         </div>
 
         <div class="tx-modal__field">
-          <label class="tx-modal__label" for="tx-edit-category">Category</label>
-          <select id="tx-edit-category" class="transactions-select tx-modal__select-full">
+          <label class="tx-modal__label" for="cc-edit-category">Category</label>
+          <select id="cc-edit-category" class="transactions-select tx-modal__select-full">
             <option value="Entertainment">Entertainment</option>
             <option value="Bills">Bills</option>
             <option value="Groceries">Groceries</option>
@@ -380,44 +380,44 @@
         </div>
 
         <div class="tx-modal__field">
-          <label class="tx-modal__label" for="tx-edit-date">Transaction date</label>
-          <input type="date" id="tx-edit-date" class="tx-modal__input" aria-describedby="tx-edit-date-err">
-          <span id="tx-edit-date-err" class="tx-modal__error" role="alert" hidden></span>
+          <label class="tx-modal__label" for="cc-edit-date">Transaction date</label>
+          <input type="date" id="cc-edit-date" class="tx-modal__input" aria-describedby="cc-edit-date-err">
+          <span id="cc-edit-date-err" class="tx-modal__error" role="alert" hidden></span>
         </div>
 
         <div class="tx-modal__field">
-          <label class="tx-modal__label" for="tx-edit-amount">Amount</label>
-          <input type="number" id="tx-edit-amount" class="tx-modal__input" inputmode="decimal" step="any" placeholder="0.00" aria-describedby="tx-edit-amount-err">
-          <span id="tx-edit-amount-err" class="tx-modal__error" role="alert" hidden></span>
+          <label class="tx-modal__label" for="cc-edit-amount">Amount</label>
+          <input type="number" id="cc-edit-amount" class="tx-modal__input" inputmode="decimal" step="any" placeholder="0.00" aria-describedby="cc-edit-amount-err">
+          <span id="cc-edit-amount-err" class="tx-modal__error" role="alert" hidden></span>
         </div>
 
         <button type="submit" class="tx-modal__submit">Save changes</button>
       </form>
 
       <div class="tx-edit-dialog__danger-wrap">
-        <button type="button" class="tx-edit-dialog__remove" id="tx-edit-remove">
+        <button type="button" class="tx-edit-dialog__remove" id="cc-edit-remove">
           Remove transaction
         </button>
       </div>
     </div>
   </dialog>
 
-  <dialog class="tx-modal" id="tx-delete-dialog" aria-labelledby="tx-delete-title">
+  <dialog class="tx-modal" id="cc-delete-dialog" aria-labelledby="cc-delete-title">
     <div class="tx-modal__surface">
       <header class="tx-modal__header">
         <div class="tx-modal__heading-block">
-          <h2 id="tx-delete-title" class="tx-modal__title">Delete transaction</h2>
-          <p id="tx-delete-lede" class="tx-modal__desc"></p>
+          <h2 id="cc-delete-title" class="tx-modal__title">Delete transaction</h2>
+          <p id="cc-delete-lede" class="tx-modal__desc"></p>
         </div>
-        <button type="button" class="tx-modal__close" id="tx-delete-close" aria-label="Close">
+        <button type="button" class="tx-modal__close" id="cc-delete-close" aria-label="Close">
           <img src="./assets/images/icon-close-modal.svg" alt="" width="26" height="26">
         </button>
       </header>
       <div class="budget-delete-actions">
-        <button type="button" class="budget-delete-btn budget-delete-btn--danger" id="tx-delete-yes">
+        <button type="button" class="budget-delete-btn budget-delete-btn--danger" id="cc-delete-yes">
           Yes, Confirm Deletion
         </button>
-        <button type="button" class="budget-delete-btn budget-delete-btn--ghost" id="tx-delete-no">
+        <button type="button" class="budget-delete-btn budget-delete-btn--ghost" id="cc-delete-no">
           No, Go Back
         </button>
       </div>
@@ -426,6 +426,6 @@
 
   <script src="./js/theme.js" defer></script>
   <script src="./js/sidebar.js" defer></script>
-  <script src="./js/transactions.js" defer></script>
+  <script src="./js/credit-cards.js" defer></script>
 </body>
 </html>
