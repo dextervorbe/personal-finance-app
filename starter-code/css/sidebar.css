@@ -357,79 +357,163 @@ body {
 }
 
 @media (max-width: 48rem) {
+  /* Fixed bottom bar: primary nav + theme (no floating toggle) */
   .sidebar {
+    position: fixed;
+    inset: auto 0 0 0;
+    top: auto;
     width: 100%;
-    position: relative;
-    inset: auto;
+    border-radius: 1rem 1rem 0 0;
+    overflow: visible;
   }
 
   .sidebar__inner {
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0.125rem;
     min-height: unset;
-    padding-block: 1rem;
+    padding: 0.375rem 0.35rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
   }
 
-  .sidebar__logo {
-    margin-bottom: 1rem;
+  .sidebar__logo,
+  .sidebar__collapse {
+    display: none;
+  }
+
+  .sidebar__nav {
+    flex: 1;
+    min-width: 0;
   }
 
   .sidebar__nav .sidebar__list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-    gap: 0.25rem;
-    padding-inline: 1rem;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 0;
+    padding: 0;
+  }
+
+  .sidebar__nav .sidebar__list > li {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
   }
 
   .sidebar__link {
-    margin-inline-end: 0;
-    border-radius: 0.75rem;
+    flex: 1;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0;
+    margin: 0;
+    min-height: 3rem;
+    padding: 0.35rem 0.125rem 0.45rem;
+    border-radius: 0.625rem 0.625rem 0 0;
+    font-size: 0;
+    line-height: 0;
+  }
+
+  /* Icon-only row — labels stay in DOM for assistive tech */
+  .sidebar__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .sidebar__icon {
+    width: auto;
+    min-height: 2rem;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar__icon-img {
+    width: 20px;
+    height: auto;
+    max-height: 22px;
+    object-fit: contain;
+  }
+
+  .sidebar__link:hover:not([aria-current="page"]) {
+    background-color: rgb(255 255 255 / 0.05);
+  }
+
+  .sidebar__link[aria-current="page"] {
+    background-color: #f7f7f8;
+    color: var(--color-primary-dark);
+    box-shadow: none;
   }
 
   .sidebar__link[aria-current="page"]::before {
-    height: 0.25rem;
-    width: 42%;
+    content: "";
     left: 50%;
-    top: 0;
-    transform: translate(-50%, -50%);
-    border-radius: 0 0 0.25rem 0.25rem;
+    right: auto;
+    top: auto;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 1.75rem;
+    height: 0.1875rem;
+    border-radius: 0.125rem 0.125rem 0 0;
+    background-color: var(--color-accent-green);
   }
 
-  .sidebar__collapse {
-    margin-top: 1rem;
+  .sidebar__link[aria-current="page"] .sidebar__icon-img {
+    filter: brightness(0);
+  }
+
+  /* Theme sits in the bar as the last slot */
+  .sidebar__theme {
+    flex: 0 0 auto;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
+    align-self: stretch;
+    width: 3rem;
+    margin: 0;
+    padding: 0.35rem 0.25rem calc(0.45rem + 0.1875rem);
+    border-radius: 0.625rem;
+    gap: 0;
   }
 
-  .layout-sidebar-collapsed .sidebar__label {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 0;
-    clip: auto;
-    overflow: visible;
+  .sidebar__theme-icon-wrap {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.375rem;
+  }
+
+  .sidebar__theme-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Ignore collapsed-desktop tweaks on mobile bottom bar */
+  .layout-sidebar-collapsed .sidebar__label,
+  .layout-sidebar-collapsed .sidebar__theme-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
   }
 
   .layout-sidebar-collapsed .sidebar__link {
-    justify-content: flex-start;
+    justify-content: flex-end;
     margin-inline: 0;
-  }
-
-  .layout-sidebar-collapsed .sidebar__collapse-label {
-    position: static;
-    width: auto;
-    height: auto;
-    clip: auto;
-    overflow: visible;
-  }
-
-  .layout-sidebar-collapsed .sidebar__theme-label {
-    position: static;
-    width: auto;
-    height: auto;
-    clip: auto;
-    overflow: visible;
-  }
-
-  .layout-sidebar-collapsed .sidebar__collapse {
-    justify-content: center;
   }
 
   .layout-sidebar-collapsed .sidebar__theme {
@@ -438,11 +522,13 @@ body {
 
   .app-shell {
     margin-inline-start: 0;
+    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
   }
 
   [data-theme="dark"] .sidebar {
     border-right: none;
-    border-bottom: 1px solid rgb(255 255 255 / 0.08);
-    box-shadow: 0 12px 32px rgb(0 0 0 / 0.55);
+    border-top: 1px solid rgb(255 255 255 / 0.08);
+    border-bottom: none;
+    box-shadow: 0 -8px 28px rgb(0 0 0 / 0.45);
   }
 }

@@ -5,6 +5,7 @@
   width: 100%;
   max-width: 70rem;
   margin-inline: auto;
+  min-width: 0;
 }
 
 .recurring-page__header {
@@ -35,25 +36,33 @@
 @media (max-width: 52rem) {
   .recurring-page__header {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    flex-direction: column;
+    flex-wrap: nowrap;
     align-items: center;
+    justify-content: center;
+    gap: 1rem;
   }
 
   .recurring-page__header-start {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
+    width: 100%;
     min-width: 0;
     order: 1;
+    text-align: center;
   }
 
   .recurring-page__header-end {
     order: 2;
     flex: 0 0 auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
 
   .recurring-page__header-mid {
     flex: 1 1 100%;
     order: 3;
+    width: 100%;
     justify-content: center;
   }
 }
@@ -77,6 +86,10 @@
   .recurring-layout {
     grid-template-columns: 1fr;
   }
+}
+
+.recurring-layout__main {
+  min-width: 0;
 }
 
 .recurring-layout__side {
@@ -177,6 +190,7 @@
 }
 
 .recurring-panel {
+  min-width: 0;
   padding: 1.5rem clamp(1rem, 3vw, 1.5rem) 1.25rem;
   background-color: var(--color-card);
   border-radius: 0.75rem;
@@ -194,6 +208,8 @@
 
 .recurring-table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   margin: 0 -0.25rem;
   padding: 0 0.25rem;
 }
@@ -203,6 +219,56 @@
   min-width: 32rem;
   border-collapse: collapse;
   font-size: 0.875rem;
+}
+
+@media (max-width: 48rem) {
+  .recurring-table {
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .recurring-table thead th:nth-child(1),
+  .recurring-table tbody td:nth-child(1) {
+    width: 38%;
+  }
+
+  .recurring-table thead th:nth-child(2),
+  .recurring-table tbody td:nth-child(2) {
+    width: 32%;
+  }
+
+  .recurring-table thead th:nth-child(3),
+  .recurring-table tbody td:nth-child(3) {
+    width: 30%;
+  }
+
+  .recurring-table tbody td:nth-child(1),
+  .recurring-table tbody td:nth-child(2),
+  .recurring-table tbody td:nth-child(3) {
+    min-width: 0;
+  }
+
+  .recurring-row__bill {
+    min-width: 0;
+  }
+
+  .recurring-row__due-cell {
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .recurring-row__due-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .recurring-row__amount {
+    white-space: nowrap;
+  }
 }
 
 .recurring-table thead th {
@@ -215,7 +281,13 @@
 }
 
 .recurring-table thead th:nth-child(2) {
-  text-align: left;
+  text-align: right;
+}
+
+@media (min-width: 48.0625rem) {
+  .recurring-table thead th:nth-child(2) {
+    text-align: left;
+  }
 }
 
 .recurring-table thead th:nth-child(3) {
