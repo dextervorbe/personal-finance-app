@@ -326,6 +326,239 @@
     return sum;
   }
 
+  /* —— Credit cards overview (same storage keys as credit-cards.js) —— */
+  var CC_TX_DELETED_KEY = "pf-cc-tx-deleted-ids";
+  var CC_TX_OVERRIDES_KEY = "pf-cc-tx-overrides";
+  var CC_TX_ADDED_KEY = "pf-cc-tx-user-added";
+  var PF_CC_ACCOUNT_KEY = "pf-cc-account";
+  var PF_CC_CARDS_KEY = "pf-cc-cards";
+  var PF_CC_ACTIVE_CARD_KEY = "pf-cc-active-card";
+  var PF_CC_SEED_CLEARED_KEY = "pf-cc-seed-cleared";
+  var CC_DEFAULT_CARD_ID = "cc-card-default";
+
+  function ccLoadDeletedIds() {
+    try {
+      var raw = localStorage.getItem(CC_TX_DELETED_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function ccLoadOverrides() {
+    try {
+      var raw = localStorage.getItem(CC_TX_OVERRIDES_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function ccLoadAddedTransactions() {
+    try {
+      var raw = localStorage.getItem(CC_TX_ADDED_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function ccSeedCleared() {
+    try {
+      return localStorage.getItem(PF_CC_SEED_CLEARED_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function ccTxEffectiveCardId(t) {
+    return t.cardId || CC_DEFAULT_CARD_ID;
+  }
+
+  function ccTxsForCard(rows, cardId) {
+    if (!cardId) return [];
+    var out = [];
+    for (var i = 0; i < rows.length; i++) {
+      if (ccTxEffectiveCardId(rows[i]) === cardId) out.push(rows[i]);
+    }
+    return out;
+  }
+
+  function ccSumAmounts(rows) {
+    var s = 0;
+    for (var i = 0; i < rows.length; i++) {
+      s += rows[i].amount;
+    }
+    return s;
+  }
+
+  function ccBalance(card, allRows) {
+    if (!card) return null;
+    return card.borrowedAmount + ccSumAmounts(ccTxsForCard(allRows, card.id));
+  }
+
+  function ccApplyOverrides(tx, ov) {
+    if (!ov) return tx;
+    return {
+      avatar: tx.avatar,
+      name: ov.name !== undefined ? ov.name : tx.name,
+      category: ov.category !== undefined ? ov.category : tx.category,
+      date: ov.date !== undefined ? ov.date : tx.date,
+      amount: ov.amount !== undefined ? ov.amount : tx.amount,
+      recurring: !!tx.recurring,
+      __txId: tx.__txId,
+      cardId: tx.cardId,
+    };
+  }
+
+  function ccRebuildAllTransactions(jsonTransactions, seedCardId) {
+    var sid = seedCardId || CC_DEFAULT_CARD_ID;
+    var deleted = ccLoadDeletedIds();
+    var overrides = ccLoadOverrides();
+    var added = ccLoadAddedTransactions();
+
+    var jsonPart = (jsonTransactions || [])
+      .map(function (t, i) {
+        var id = "cc-b-" + i;
+        if (deleted.has(id)) return null;
+        var tx = {
+          avatar: t.avatar,
+          name: t.name,
+          category: t.category,
+          date: t.date,
+          amount: t.amount,
+          recurring: !!t.recurring,
+          cardId: sid,
+          __txId: id,
+        };
+        return ccApplyOverrides(tx, overrides[id]);
+      })
+      .filter(Boolean);
+
+    var addedPart = added.map(function (t) {
+      var base = ccApplyOverrides(t, overrides[t.__txId]);
+      if (!base.cardId) base.cardId = sid;
+      return base;
+    });
+
+    return addedPart.concat(jsonPart);
+  }
+
+  function ccLoadCardsState() {
+    try {
+      var raw = localStorage.getItem(PF_CC_CARDS_KEY);
+      if (raw) {
+        var arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length > 0) {
+          var cardsOut = [];
+          for (var i = 0; i < arr.length; i++) {
+            var c = arr[i];
+            if (
+              c &&
+              typeof c.id === "string" &&
+              typeof c.name === "string" &&
+              Number.isFinite(Number(c.borrowedAmount))
+            ) {
+              cardsOut.push({
+                id: c.id,
+                name: c.name.trim() || "Card",
+                borrowedAmount: Number(c.borrowedAmount),
+              });
+            }
+          }
+          if (cardsOut.length > 0) {
+            var active = localStorage.getItem(PF_CC_ACTIVE_CARD_KEY);
+            if (
+              !active ||
+              !cardsOut.some(function (x) {
+                return x.id === active;
+              })
+            ) {
+              active = cardsOut[0].id;
+            }
+            return { cards: cardsOut, activeCardId: active };
+          }
+        }
+      }
+      var legacy = localStorage.getItem(PF_CC_ACCOUNT_KEY);
+      if (legacy) {
+        try {
+          var o = JSON.parse(legacy);
+          if (
+            o &&
+            typeof o.name === "string" &&
+            Number.isFinite(Number(o.borrowedAmount))
+          ) {
+            return {
+              cards: [
+                {
+                  id: CC_DEFAULT_CARD_ID,
+                  name: o.name.trim() || "Card",
+                  borrowedAmount: Number(o.borrowedAmount),
+                },
+              ],
+              activeCardId: CC_DEFAULT_CARD_ID,
+            };
+          }
+        } catch (e) {}
+      }
+    } catch (e2) {}
+    if (ccSeedCleared()) {
+      return { cards: [], activeCardId: null };
+    }
+    return {
+      cards: [
+        {
+          id: CC_DEFAULT_CARD_ID,
+          name: "Capital One",
+          borrowedAmount: 1000,
+        },
+      ],
+      activeCardId: CC_DEFAULT_CARD_ID,
+    };
+  }
+
+  function renderCreditCardsOverview(container, cards, allCcTransactions) {
+    if (!container) return;
+    container.innerHTML = "";
+    if (!cards || cards.length === 0) {
+      var empty = document.createElement("p");
+      empty.className = "overview-cc-empty";
+      empty.textContent =
+        "No credit cards on file. Add one from Credit Cards.";
+      container.appendChild(empty);
+      return;
+    }
+
+    for (var ci = 0; ci < cards.length; ci++) {
+      var card = cards[ci];
+      var accentIdx = ci % 5;
+      var row = document.createElement("div");
+      row.className =
+        "overview-cc-row overview-cc-row--accent-" + accentIdx;
+
+      var body = document.createElement("div");
+      body.className = "overview-cc-row__body";
+
+      var lbl = document.createElement("p");
+      lbl.className = "overview-cc-row__label";
+      lbl.textContent = card.name;
+
+      var bal = ccBalance(card, allCcTransactions);
+      var val = document.createElement("p");
+      val.className = "overview-cc-row__value";
+      val.textContent =
+        bal !== null ? currency.format(bal) : "—";
+
+      body.appendChild(lbl);
+      body.appendChild(val);
+      row.appendChild(body);
+      container.appendChild(row);
+    }
+  }
+
   function cssVar(name, fallback) {
     var v = getComputedStyle(document.documentElement)
       .getPropertyValue(name)
@@ -664,6 +897,20 @@
           viewYear,
           viewMonth
         )
+      );
+
+      var ccState = ccLoadCardsState();
+      var ccCards = ccState.cards;
+      var ccSeedId =
+        ccCards.length > 0 ? ccCards[0].id : CC_DEFAULT_CARD_ID;
+      var ccJsonSource = ccSeedCleared()
+        ? []
+        : overviewData.creditCardTransactions || [];
+      var ccAllTx = ccRebuildAllTransactions(ccJsonSource, ccSeedId);
+      renderCreditCardsOverview(
+        document.getElementById("overview-credit-cards"),
+        ccCards,
+        ccAllTx
       );
     }
 
