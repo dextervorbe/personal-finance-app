@@ -551,11 +551,8 @@
   margin-bottom: 1rem;
 }
 
-.budget-card__latest-title {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--color-heading);
+.budget-card__latest-header--link-only {
+  justify-content: flex-end;
 }
 
 .budget-card__latest-link {

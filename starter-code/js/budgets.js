@@ -98,9 +98,21 @@
     return sum;
   }
 
-  function latestForCategory(transactions, category, n) {
+  function latestForCategoryInMonth(
+    transactions,
+    category,
+    year,
+    monthIndex,
+    n
+  ) {
     var filtered = transactions.filter(function (t) {
-      return t.category === category;
+      if (t.category !== category) return false;
+      var d = parseISO(t.date);
+      if (d.getUTCFullYear() !== year || d.getUTCMonth() !== monthIndex) {
+        return false;
+      }
+      if (t.amount >= 0) return false;
+      return true;
     });
     filtered.sort(function (a, b) {
       return parseISO(b.date) - parseISO(a.date);
@@ -572,7 +584,13 @@
         );
         var remaining = b.maximum - spent;
         var pct = b.maximum > 0 ? Math.min((spent / b.maximum) * 100, 100) : 0;
-        var latest = latestForCategory(transactions, b.category, 3);
+        var latest = latestForCategoryInMonth(
+          transactions,
+          b.category,
+          viewYear,
+          viewMonth,
+          3
+        );
 
         var article = document.createElement("article");
         article.className = "budget-card";
@@ -732,10 +750,8 @@
         latestWrap.className = "budget-card__latest";
 
         var latestHead = document.createElement("div");
-        latestHead.className = "budget-card__latest-header";
-        var latestTitle = document.createElement("h4");
-        latestTitle.className = "budget-card__latest-title";
-        latestTitle.textContent = "Latest Spending";
+        latestHead.className =
+          "budget-card__latest-header budget-card__latest-header--link-only";
         var seeAll = document.createElement("a");
         seeAll.className = "budget-card__latest-link";
         seeAll.href =
@@ -748,11 +764,15 @@
         chev.width = 6;
         chev.height = 11;
         seeAll.appendChild(chev);
-        latestHead.appendChild(latestTitle);
         latestHead.appendChild(seeAll);
 
         var list = document.createElement("ul");
         list.className = "budget-card__tx-list";
+        list.setAttribute(
+          "aria-label",
+          "Spending in " +
+            monthAriaFmt.format(new Date(Date.UTC(viewYear, viewMonth, 1)))
+        );
 
         for (var ti = 0; ti < latest.length; ti++) {
           var tx = latest[ti];
