@@ -32,6 +32,42 @@
     return new Date(iso);
   }
 
+  function addCalendarMonths(year, monthIndex, delta) {
+    var d = new Date(Date.UTC(year, monthIndex + delta, 1));
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth() };
+  }
+
+  function sumBudgetMaximums(budgets) {
+    var s = 0;
+    for (var i = 0; i < budgets.length; i++) {
+      s += budgets[i].maximum;
+    }
+    return s;
+  }
+
+  function totalExpenseInMonth(transactions, year, monthIndex) {
+    var sum = 0;
+    for (var i = 0; i < transactions.length; i++) {
+      var t = transactions[i];
+      var d = parseISO(t.date);
+      if (d.getUTCFullYear() !== year || d.getUTCMonth() !== monthIndex) continue;
+      if (t.amount >= 0) continue;
+      sum += Math.abs(t.amount);
+    }
+    return sum;
+  }
+
+  function filterByCalendarMonth(rows, year, monthIndex) {
+    var out = [];
+    for (var i = 0; i < rows.length; i++) {
+      var d = parseISO(rows[i].date);
+      if (d.getUTCFullYear() === year && d.getUTCMonth() === monthIndex) {
+        out.push(rows[i]);
+      }
+    }
+    return out;
+  }
+
   function initials(name) {
     var parts = name.trim().split(/\s+/);
     var a = parts[0] ? parts[0][0] : "";
@@ -53,6 +89,24 @@
     "November",
     "December",
   ];
+
+  var MONTH_SHORT = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  var MONTH_STRIP_SLOTS = 7;
+  var MONTH_STRIP_CENTER = 3;
 
   function ordinalSuffix(day) {
     var d = Number(day);
@@ -469,8 +523,20 @@
 
     var allTransactions = [];
     var jsonTransactionsCache = [];
+    var budgetsData = [];
     var currentPage = 1;
     var pendingDeleteTxId = null;
+
+    var txMonthYear = document.getElementById("tx-month-year");
+    var txMonthStrip = document.getElementById("tx-month-strip");
+    var monthNavYear = 2024;
+    var monthNavMonth = 7;
+
+    var monthAriaFmt = new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
 
     var editDialog = document.getElementById("tx-edit-dialog");
     var editCloseBtn = document.getElementById("tx-edit-close");
@@ -591,6 +657,58 @@
       applyFilters();
     }
 
+    function updateMonthCard(btn, y, m, isActive) {
+      if (!btn) return;
+      var cap = sumBudgetMaximums(budgetsData);
+      var exp = totalExpenseInMonth(allTransactions, y, m);
+      btn.classList.toggle("budgets-month-card--active", isActive);
+      btn.classList.toggle("budgets-month-card--empty", cap <= 0);
+
+      var label = btn.querySelector(".budgets-month-card__label");
+      if (label) label.textContent = MONTH_SHORT[m];
+
+      var ariaBase = monthAriaFmt.format(new Date(Date.UTC(y, m, 1)));
+      btn.setAttribute(
+        "aria-label",
+        isActive
+          ? ariaBase + ", selected"
+          : "Show transactions for " + ariaBase
+      );
+      if (isActive) {
+        btn.setAttribute("aria-current", "date");
+      } else {
+        btn.removeAttribute("aria-current");
+      }
+
+      var barA = btn.querySelector(".budgets-month-card__bar--solid");
+      var barB = btn.querySelector(".budgets-month-card__bar--soft");
+      if (cap <= 0) {
+        if (barA) barA.style.removeProperty("height");
+        if (barB) barB.style.removeProperty("height");
+        return;
+      }
+      var pct = Math.min(exp / cap, 1);
+      var hSolid = Math.max(pct * 100, 3);
+      var hSoft = Math.max((1 - pct) * 100, 3);
+      if (barA) barA.style.height = hSolid + "%";
+      if (barB) barB.style.height = hSoft + "%";
+    }
+
+    function renderMonthNav() {
+      if (!txMonthYear || !txMonthStrip) return;
+
+      var buttons = txMonthStrip.querySelectorAll(".budgets-month-card");
+      if (buttons.length !== MONTH_STRIP_SLOTS) return;
+
+      txMonthYear.textContent = String(monthNavYear);
+
+      for (var slot = 0; slot < MONTH_STRIP_SLOTS; slot++) {
+        var offset = slot - MONTH_STRIP_CENTER;
+        var t = addCalendarMonths(monthNavYear, monthNavMonth, offset);
+        updateMonthCard(buttons[slot], t.y, t.m, offset === 0);
+      }
+    }
+
     function applyFilters() {
       var q = searchEl.value;
       var sortMode = sortEl.value;
@@ -598,6 +716,7 @@
 
       var rows = filterByCategory(allTransactions, cat);
       rows = filterBySearch(rows, q);
+      rows = filterByCalendarMonth(rows, monthNavYear, monthNavMonth);
       rows = sortRows(rows, sortMode);
 
       var total = rows.length;
@@ -633,6 +752,7 @@
       pagNav.hidden = total === 0;
 
       renderPagination(totalPages, total);
+      renderMonthNav();
     }
 
     function renderPagination(totalPages, totalCount) {
@@ -689,6 +809,28 @@
       currentPage++;
       applyFilters();
     });
+
+    if (txMonthStrip) {
+      txMonthStrip.addEventListener("click", function (e) {
+        var btn = e.target.closest(".budgets-month-card");
+        if (!btn || !txMonthStrip.contains(btn)) return;
+        var buttons = txMonthStrip.querySelectorAll(".budgets-month-card");
+        var slot = -1;
+        for (var i = 0; i < buttons.length; i++) {
+          if (buttons[i] === btn) {
+            slot = i;
+            break;
+          }
+        }
+        if (slot < 0) return;
+        var offset = slot - MONTH_STRIP_CENTER;
+        var t = addCalendarMonths(monthNavYear, monthNavMonth, offset);
+        monthNavYear = t.y;
+        monthNavMonth = t.m;
+        currentPage = 1;
+        applyFilters();
+      });
+    }
 
     function hideErr(el) {
       el.hidden = true;
@@ -1092,6 +1234,7 @@
       })
       .then(function (data) {
         jsonTransactionsCache = data.transactions || [];
+        budgetsData = data.budgets || [];
         rebuildAllFromCache();
         applyFilters();
         main.removeAttribute("aria-busy");

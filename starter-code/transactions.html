@@ -94,8 +94,72 @@
   <div class="app-shell">
     <main id="main-content" class="transactions-page" aria-busy="true">
       <header class="transactions-page__header">
-        <h1 class="transactions-page__title">Transactions</h1>
-        <button type="button" class="transactions-add-btn" id="tx-add-open">+ Add New Transaction</button>
+        <div class="transactions-page__header-start">
+          <h1 class="transactions-page__title">Transactions</h1>
+        </div>
+        <div class="transactions-page__header-mid">
+          <div class="budgets-month-nav" id="tx-month-nav">
+            <div class="budgets-month-nav__year-wrap" aria-hidden="true">
+              <span class="budgets-month-nav__year-rule"></span>
+              <span class="budgets-month-nav__year" id="tx-month-year"></span>
+              <span class="budgets-month-nav__year-rule"></span>
+            </div>
+            <div class="budgets-month-nav__strip month-nav-strip" id="tx-month-strip" role="group" aria-label="Transactions month">
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="transactions-page__header-end">
+          <button type="button" class="transactions-add-btn" id="tx-add-open">+ Add New Transaction</button>
+        </div>
       </header>
 
       <section class="transactions-panel" aria-labelledby="transactions-heading">

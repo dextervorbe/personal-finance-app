@@ -20,12 +20,54 @@
 }
 
 .transactions-page__header {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+.transactions-page__header-start {
+  justify-self: start;
+  min-width: 0;
+}
+
+.transactions-page__header-mid {
+  justify-self: center;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.transactions-page__header-end {
+  justify-self: end;
+  flex-shrink: 0;
+}
+
+@media (max-width: 52rem) {
+  .transactions-page__header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .transactions-page__header-start {
+    flex: 1 1 auto;
+    min-width: 0;
+    order: 1;
+  }
+
+  .transactions-page__header-end {
+    order: 2;
+    flex: 0 0 auto;
+  }
+
+  .transactions-page__header-mid {
+    flex: 1 1 100%;
+    order: 3;
+    justify-content: center;
+  }
 }
 
 .transactions-page__title {
