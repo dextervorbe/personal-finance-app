@@ -91,6 +91,4 @@
     syncButtonText();
     updateSelectedState();
   };
-
-  global.closeBudgetYearPanels = closeAllYearPanels;
 })(typeof window !== "undefined" ? window : global);
