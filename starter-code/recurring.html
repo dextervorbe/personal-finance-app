@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/sidebar.css">
   <link rel="stylesheet" href="./css/transactions.css">
+  <link rel="stylesheet" href="./css/budgets.css">
   <link rel="stylesheet" href="./css/recurring.css">
 
   <title>Frontend Mentor | Personal finance app - Recurring bills</title>
@@ -93,7 +94,69 @@
 
   <div class="app-shell">
     <main id="main-content" class="recurring-page" aria-busy="true">
-      <h1 class="recurring-page__title">Recurring Bills</h1>
+      <header class="recurring-page__header">
+        <h1 class="recurring-page__title">Recurring Bills</h1>
+        <div class="recurring-page__header-mid">
+          <div class="budgets-month-nav" id="recurring-month-nav">
+            <div class="budgets-month-nav__year-wrap" aria-hidden="true">
+              <span class="budgets-month-nav__year-rule"></span>
+              <span class="budgets-month-nav__year" id="recurring-month-year"></span>
+              <span class="budgets-month-nav__year-rule"></span>
+            </div>
+            <div class="budgets-month-nav__strip month-nav-strip" id="recurring-month-strip" role="group" aria-label="Recurring bills month">
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+              <button type="button" class="budgets-month-card">
+                <span class="budgets-month-card__chart" aria-hidden="true">
+                  <span class="budgets-month-card__bar budgets-month-card__bar--solid"></span>
+                  <span class="budgets-month-card__bar budgets-month-card__bar--soft"></span>
+                </span>
+                <span class="budgets-month-card__label"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
 
       <div class="recurring-layout">
         <div class="recurring-layout__side">

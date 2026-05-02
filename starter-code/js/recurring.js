@@ -1,6 +1,21 @@
 (function () {
-  var VIEW_YEAR = 2024;
-  var VIEW_MONTH = 7;
+  var MONTH_SHORT = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  var MONTH_STRIP_SLOTS = 7;
+  var MONTH_STRIP_CENTER = 3;
 
   var CATEGORY_ACCENT = {
     Entertainment: "#C94736",
@@ -23,6 +38,31 @@
 
   function parseISO(iso) {
     return new Date(iso);
+  }
+
+  function addCalendarMonths(year, monthIndex, delta) {
+    var d = new Date(Date.UTC(year, monthIndex + delta, 1));
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth() };
+  }
+
+  function totalExpenseInMonth(transactions, year, monthIndex) {
+    var sum = 0;
+    for (var i = 0; i < transactions.length; i++) {
+      var t = transactions[i];
+      var d = parseISO(t.date);
+      if (d.getUTCFullYear() !== year || d.getUTCMonth() !== monthIndex) continue;
+      if (t.amount >= 0) continue;
+      sum += Math.abs(t.amount);
+    }
+    return sum;
+  }
+
+  function sumBudgetMaximums(budgets) {
+    var s = 0;
+    for (var i = 0; i < budgets.length; i++) {
+      s += budgets[i].maximum;
+    }
+    return s;
   }
 
   function initials(name) {
@@ -127,6 +167,9 @@
     var main = document.querySelector(".recurring-page");
     if (!main) return;
 
+    var recurringMonthYear = document.getElementById("recurring-month-year");
+    var recurringMonthStrip = document.getElementById("recurring-month-strip");
+
     var totalEl = document.getElementById("recurring-total-bills");
     var paidEl = document.getElementById("recurring-summary-paid");
     var upcomingEl = document.getElementById("recurring-summary-upcoming");
@@ -135,21 +178,79 @@
     var searchInput = document.getElementById("recurring-search");
     var sortSelect = document.getElementById("recurring-sort");
 
+    var viewYear = 2024;
+    var viewMonth = 7;
+
+    var monthAriaFmt = new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+
     var allTransactions = [];
+    var budgetsData = [];
     var templateRows = [];
     var paidNameSet = new Set();
 
     function computePaidNames(transactions) {
       var set = new Set();
-      var paid = paidRecurringInMonth(
-        transactions,
-        VIEW_YEAR,
-        VIEW_MONTH
-      );
+      var paid = paidRecurringInMonth(transactions, viewYear, viewMonth);
       for (var i = 0; i < paid.length; i++) {
         set.add(paid[i].name);
       }
       return set;
+    }
+
+    function updateMonthCard(btn, y, m, isActive) {
+      if (!btn) return;
+      var cap = sumBudgetMaximums(budgetsData);
+      var exp = totalExpenseInMonth(allTransactions, y, m);
+      btn.classList.toggle("budgets-month-card--active", isActive);
+      btn.classList.toggle("budgets-month-card--empty", cap <= 0);
+
+      var label = btn.querySelector(".budgets-month-card__label");
+      if (label) label.textContent = MONTH_SHORT[m];
+
+      var ariaBase = monthAriaFmt.format(new Date(Date.UTC(y, m, 1)));
+      btn.setAttribute(
+        "aria-label",
+        isActive
+          ? ariaBase + ", selected"
+          : "Show recurring bills for " + ariaBase
+      );
+      if (isActive) {
+        btn.setAttribute("aria-current", "date");
+      } else {
+        btn.removeAttribute("aria-current");
+      }
+
+      var barA = btn.querySelector(".budgets-month-card__bar--solid");
+      var barB = btn.querySelector(".budgets-month-card__bar--soft");
+      if (cap <= 0) {
+        if (barA) barA.style.removeProperty("height");
+        if (barB) barB.style.removeProperty("height");
+        return;
+      }
+      var pct = Math.min(exp / cap, 1);
+      var hSolid = Math.max(pct * 100, 3);
+      var hSoft = Math.max((1 - pct) * 100, 3);
+      if (barA) barA.style.height = hSolid + "%";
+      if (barB) barB.style.height = hSoft + "%";
+    }
+
+    function renderMonthNav() {
+      if (!recurringMonthYear || !recurringMonthStrip) return;
+
+      var buttons = recurringMonthStrip.querySelectorAll(".budgets-month-card");
+      if (buttons.length !== MONTH_STRIP_SLOTS) return;
+
+      recurringMonthYear.textContent = String(viewYear);
+
+      for (var slot = 0; slot < MONTH_STRIP_SLOTS; slot++) {
+        var offset = slot - MONTH_STRIP_CENTER;
+        var t = addCalendarMonths(viewYear, viewMonth, offset);
+        updateMonthCard(buttons[slot], t.y, t.m, offset === 0);
+      }
     }
 
     function sortTemplates(rows, key) {
@@ -202,11 +303,7 @@
       }
       if (totalEl) totalEl.textContent = currency.format(totalSum);
 
-      var paidTx = paidRecurringInMonth(
-        transactions,
-        VIEW_YEAR,
-        VIEW_MONTH
-      );
+      var paidTx = paidRecurringInMonth(transactions, viewYear, viewMonth);
       var paidSum = 0;
       for (var p = 0; p < paidTx.length; p++) {
         paidSum += Math.abs(paidTx[p].amount);
@@ -214,11 +311,7 @@
       if (paidEl)
         paidEl.textContent = formatSummaryLine(paidTx.length, paidSum);
 
-      var unpaid = unpaidRecurringForMonth(
-        transactions,
-        VIEW_YEAR,
-        VIEW_MONTH
-      );
+      var unpaid = unpaidRecurringForMonth(transactions, viewYear, viewMonth);
       var upcomingSum = 0;
       for (var u = 0; u < unpaid.length; u++) {
         upcomingSum += Math.abs(unpaid[u].amount);
@@ -227,12 +320,7 @@
         upcomingEl.textContent = formatSummaryLine(unpaid.length, upcomingSum);
 
       var refDate = latestTransactionDate(transactions);
-      var ds = dueSoonStats(
-        transactions,
-        refDate,
-        VIEW_YEAR,
-        VIEW_MONTH
-      );
+      var ds = dueSoonStats(transactions, refDate, viewYear, viewMonth);
       if (dueEl)
         dueEl.textContent = formatSummaryLine(ds.count, ds.sum);
     }
@@ -330,8 +418,31 @@
     }
 
     function refresh() {
+      paidNameSet = computePaidNames(allTransactions);
+      renderMonthNav();
       updateSummary(allTransactions);
       renderTable();
+    }
+
+    if (recurringMonthStrip) {
+      recurringMonthStrip.addEventListener("click", function (e) {
+        var btn = e.target.closest(".budgets-month-card");
+        if (!recurringMonthStrip.contains(btn)) return;
+        var buttons = recurringMonthStrip.querySelectorAll(".budgets-month-card");
+        var slot = -1;
+        for (var i = 0; i < buttons.length; i++) {
+          if (buttons[i] === btn) {
+            slot = i;
+            break;
+          }
+        }
+        if (slot < 0) return;
+        var offset = slot - MONTH_STRIP_CENTER;
+        var t = addCalendarMonths(viewYear, viewMonth, offset);
+        viewYear = t.y;
+        viewMonth = t.m;
+        refresh();
+      });
     }
 
     if (searchInput) {
@@ -348,8 +459,8 @@
       })
       .then(function (data) {
         allTransactions = data.transactions || [];
+        budgetsData = data.budgets || [];
         templateRows = uniqueRecurringLatest(allTransactions);
-        paidNameSet = computePaidNames(allTransactions);
         refresh();
         main.removeAttribute("aria-busy");
       })
