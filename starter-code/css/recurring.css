@@ -1,0 +1,263 @@
+/* Recurring bills page */
+
+.recurring-page {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 70rem;
+  margin-inline: auto;
+}
+
+.recurring-page__title {
+  margin: 0 0 1.5rem;
+  font-size: clamp(1.75rem, 4vw, 2rem);
+  font-weight: 700;
+  color: var(--color-heading);
+  letter-spacing: -0.02em;
+}
+
+.recurring-layout {
+  display: grid;
+  grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 56rem) {
+  .recurring-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.recurring-layout__side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.recurring-stat-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem 1.35rem;
+  border-radius: 0.75rem;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-divider);
+}
+
+.recurring-stat-card__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  color: var(--color-heading);
+}
+
+[data-theme="dark"] .recurring-stat-card__icon {
+  filter: brightness(0) saturate(0) invert(1);
+}
+
+[data-theme="light"] .recurring-stat-card__icon {
+  filter: brightness(0) saturate(100%);
+  opacity: 0.88;
+}
+
+.recurring-stat-card__label {
+  margin: 0 0 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.recurring-stat-card__value {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  letter-spacing: -0.02em;
+}
+
+.recurring-summary-card {
+  padding: 1.25rem 1.35rem;
+  border-radius: 0.75rem;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-divider);
+}
+
+.recurring-summary-card__title {
+  margin: 0 0 1rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+.recurring-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.recurring-summary-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.recurring-summary-list__item:first-child {
+  padding-top: 0;
+}
+
+.recurring-summary-list__item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.recurring-summary-list__value {
+  font-weight: 700;
+  color: var(--color-heading);
+  text-align: right;
+}
+
+.recurring-summary-list__value--due {
+  color: #c94736;
+}
+
+.recurring-panel {
+  padding: 1.5rem clamp(1rem, 3vw, 1.5rem) 1.25rem;
+  background-color: var(--color-card);
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-divider);
+}
+
+.recurring-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.recurring-table-wrap {
+  overflow-x: auto;
+  margin: 0 -0.25rem;
+  padding: 0 0.25rem;
+}
+
+.recurring-table {
+  width: 100%;
+  min-width: 32rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.recurring-table thead th {
+  padding: 0 0 0.75rem;
+  border-bottom: 1px solid var(--color-divider);
+  text-align: left;
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.recurring-table thead th:nth-child(2) {
+  text-align: left;
+}
+
+.recurring-table thead th:nth-child(3) {
+  text-align: right;
+}
+
+.recurring-table tbody td {
+  padding: 1rem 0;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.recurring-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.recurring-row__bill {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.recurring-row__marker {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.recurring-row__marker-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recurring-row__marker-fallback {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.recurring-row__title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recurring-row__due-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.recurring-row__due-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.recurring-row__paid-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+}
+
+.recurring-row__amount {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  text-align: right;
+}
+
+.recurring-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.recurring-error {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-error-bg);
+  color: var(--color-heading);
+  font-size: 0.875rem;
+}

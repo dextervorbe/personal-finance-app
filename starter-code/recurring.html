@@ -11,6 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/sidebar.css">
+  <link rel="stylesheet" href="./css/transactions.css">
+  <link rel="stylesheet" href="./css/recurring.css">
 
   <title>Frontend Mentor | Personal finance app - Recurring bills</title>
 </head>
@@ -90,31 +92,96 @@
   </aside>
 
   <div class="app-shell">
-    <main id="main-content">
-      Recurring Bills
+    <main id="main-content" class="recurring-page" aria-busy="true">
+      <h1 class="recurring-page__title">Recurring Bills</h1>
 
-      Total Bills
+      <div class="recurring-layout">
+        <div class="recurring-layout__side">
+          <section class="recurring-stat-card" aria-labelledby="recurring-total-label">
+            <img
+              class="recurring-stat-card__icon"
+              src="./assets/images/icon-recurring-bills.svg"
+              alt=""
+              width="32"
+              height="28"
+            >
+            <div>
+              <p id="recurring-total-label" class="recurring-stat-card__label">Total Bills</p>
+              <p class="recurring-stat-card__value" id="recurring-total-bills">—</p>
+            </div>
+          </section>
 
-      Summary
-      Paid Bills
-      Total Upcoming
-      Due Soon
+          <section class="recurring-summary-card" aria-labelledby="recurring-summary-heading">
+            <h2 id="recurring-summary-heading" class="recurring-summary-card__title">Summary</h2>
+            <ul class="recurring-summary-list">
+              <li class="recurring-summary-list__item">
+                <span>Paid Bills</span>
+                <span class="recurring-summary-list__value" id="recurring-summary-paid">—</span>
+              </li>
+              <li class="recurring-summary-list__item">
+                <span>Total Upcoming</span>
+                <span class="recurring-summary-list__value" id="recurring-summary-upcoming">—</span>
+              </li>
+              <li class="recurring-summary-list__item">
+                <span>Due Soon</span>
+                <span class="recurring-summary-list__value recurring-summary-list__value--due" id="recurring-summary-due">—</span>
+              </li>
+            </ul>
+          </section>
+        </div>
 
-      Search bills
+        <div class="recurring-layout__main">
+          <section class="recurring-panel" aria-labelledby="recurring-panel-heading">
+            <h2 id="recurring-panel-heading" class="visually-hidden">All recurring bills</h2>
 
-      Sort by
-      Latest
-      Oldest
-      A to Z
-      Z to A
-      Highest
-      Lowest
+            <div class="recurring-toolbar">
+              <div class="transactions-search">
+                <label class="visually-hidden" for="recurring-search">Search bills</label>
+                <input
+                  type="search"
+                  id="recurring-search"
+                  class="transactions-search__input"
+                  placeholder="Search bills"
+                  autocomplete="off"
+                >
+                <img class="transactions-search__icon" src="./assets/images/icon-search.svg" alt="" width="14" height="14">
+              </div>
 
-      <!-- Add bills data -->
+              <div class="transactions-filters">
+                <label>
+                  Sort by
+                  <select id="recurring-sort" class="transactions-select" aria-label="Sort recurring bills">
+                    <option value="latest">Latest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="az">A to Z</option>
+                    <option value="za">Z to A</option>
+                    <option value="highest">Highest</option>
+                    <option value="lowest">Lowest</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div class="recurring-table-wrap">
+              <table class="recurring-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Bill Title</th>
+                    <th scope="col">Due Date</th>
+                    <th scope="col">Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="recurring-tbody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
     </main>
   </div>
 
   <script src="./js/theme.js" defer></script>
   <script src="./js/sidebar.js" defer></script>
+  <script src="./js/recurring.js" defer></script>
 </body>
 </html>
