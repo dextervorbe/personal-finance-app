@@ -390,7 +390,8 @@
       category: ov.category !== undefined ? ov.category : tx.category,
       date: ov.date !== undefined ? ov.date : tx.date,
       amount: ov.amount !== undefined ? ov.amount : tx.amount,
-      recurring: !!tx.recurring,
+      recurring:
+        ov.recurring !== undefined ? !!ov.recurring : !!tx.recurring,
       __txId: tx.__txId,
       cardId: tx.cardId,
     };
@@ -743,6 +744,7 @@
     var editCategory = document.getElementById("cc-edit-category");
     var editDate = document.getElementById("cc-edit-date");
     var editAmount = document.getElementById("cc-edit-amount");
+    var editRecurring = document.getElementById("cc-edit-recurring");
     var editNameErr = document.getElementById("cc-edit-name-err");
     var editDateErr = document.getElementById("cc-edit-date-err");
     var editAmountErr = document.getElementById("cc-edit-amount-err");
@@ -1127,6 +1129,7 @@
       if (editCategory) editCategory.value = tx.category || "General";
       if (editDate) editDate.value = isoToDateInputValue(tx.date);
       if (editAmount) editAmount.value = String(tx.amount);
+      if (editRecurring) editRecurring.checked = !!tx.recurring;
       editDialog.showModal();
       requestAnimationFrame(function () {
         if (editName) editName.focus();
@@ -1737,6 +1740,7 @@
           category: catVal,
           date: isoDate,
           amount: amtNum,
+          recurring: !!(editRecurring && editRecurring.checked),
         };
         saveOverrides(ov);
         rebuildAllFromCache();

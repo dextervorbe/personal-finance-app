@@ -78,7 +78,8 @@
       category: ov.category !== undefined ? ov.category : tx.category,
       date: ov.date !== undefined ? ov.date : tx.date,
       amount: ov.amount !== undefined ? ov.amount : tx.amount,
-      recurring: !!tx.recurring,
+      recurring:
+        ov.recurring !== undefined ? !!ov.recurring : !!tx.recurring,
       __txId: tx.__txId,
     };
   }
