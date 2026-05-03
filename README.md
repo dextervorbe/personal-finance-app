@@ -2,6 +2,8 @@
 
 Vanilla HTML, CSS, and JavaScript implementation of the [Frontend Mentor Personal finance app](https://www.frontendmentor.io) premium challenge — a multi-page dashboard for overview, transactions, budgets, savings pots, recurring bills, **plus** extended **credit cards**, **settings**, and other features described under **Additional pages & features** below.
 
+**Live site:** [https://dextervorbe.github.io/personal-finance-app/](https://dextervorbe.github.io/personal-finance-app/)
+
 ## Run locally (fork / clone)
 
 You need **Node.js** (includes `npm`) so the static server can serve `data.json` — browsers block `fetch()` from `file://`, so open the app over HTTP.
@@ -59,6 +61,7 @@ These are not spelled out in the main Frontend Mentor “users should be able to
 
 ## Links
 
+- [Live demo (GitHub Pages)](https://dextervorbe.github.io/personal-finance-app/)
 - [Frontend Mentor — submit solutions](https://www.frontendmentor.io/guides/how-to-submit-solutions)
 - [Suggested hosts](https://www.frontendmentor.io/guides/hosting-your-solution) (GitHub Pages, Vercel, Netlify, etc.)
 
