@@ -36,6 +36,82 @@
     minimumFractionDigits: 2,
   });
 
+  /** Same keys as transactions.js — recurring paid-from-tx matches saved edits. */
+  var TX_DELETED_KEY = "pf-tx-deleted-ids";
+  var TX_OVERRIDES_KEY = "pf-tx-overrides";
+  var TX_ADDED_KEY = "pf-tx-user-added";
+
+  function txOvLoadDeletedIds() {
+    try {
+      var raw = localStorage.getItem(TX_DELETED_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function txOvLoadOverrides() {
+    try {
+      var raw = localStorage.getItem(TX_OVERRIDES_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function txOvLoadAdded() {
+    try {
+      var raw = localStorage.getItem(TX_ADDED_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function txOvApplyOverrides(tx, ov) {
+    if (!ov) return tx;
+    return {
+      avatar: tx.avatar,
+      name: ov.name !== undefined ? ov.name : tx.name,
+      category: ov.category !== undefined ? ov.category : tx.category,
+      date: ov.date !== undefined ? ov.date : tx.date,
+      amount: ov.amount !== undefined ? ov.amount : tx.amount,
+      recurring: !!tx.recurring,
+      __txId: tx.__txId,
+    };
+  }
+
+  function rebuildMainTransactionsFromStorage(jsonTransactions) {
+    var deleted = txOvLoadDeletedIds();
+    var overrides = txOvLoadOverrides();
+    var added = txOvLoadAdded();
+
+    var jsonPart = (jsonTransactions || [])
+      .map(function (t, i) {
+        var id = "tx-b-" + i;
+        if (deleted.has(id)) return null;
+        var tx = {
+          avatar: t.avatar,
+          name: t.name,
+          category: t.category,
+          date: t.date,
+          amount: t.amount,
+          recurring: !!t.recurring,
+          __txId: id,
+        };
+        return txOvApplyOverrides(tx, overrides[id]);
+      })
+      .filter(Boolean);
+
+    var addedPart = added.map(function (t) {
+      return txOvApplyOverrides(t, overrides[t.__txId]);
+    });
+
+    return addedPart.concat(jsonPart);
+  }
+
   function parseISO(iso) {
     return new Date(iso);
   }
@@ -1168,7 +1244,9 @@
         return res.json();
       })
       .then(function (data) {
-        allTransactions = data.transactions || [];
+        allTransactions = rebuildMainTransactionsFromStorage(
+          data.transactions || []
+        );
         budgetsData = data.budgets || [];
         refresh();
         main.removeAttribute("aria-busy");

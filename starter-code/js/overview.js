@@ -377,6 +377,16 @@
       paidNames.add(paid[i].name);
     }
     var visible = recurringTemplatesVisibleForOverview(transactions);
+    var visibleNames = new Set();
+    for (var vi = 0; vi < visible.length; vi++) {
+      visibleNames.add(visible[vi].name);
+    }
+    var mo = loadPaidOverridesOverview()[yearMonthKeyOverview(year, monthIndex)];
+    if (mo) {
+      for (var nm in mo) {
+        if (mo[nm] && visibleNames.has(nm)) paidNames.add(nm);
+      }
+    }
     return visible.filter(function (v) {
       return !paidNames.has(v.name);
     });

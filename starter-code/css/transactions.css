@@ -735,7 +735,8 @@
   color: var(--color-text-muted);
 }
 
-.tx-modal-field-date-wrap {
+.tx-modal-field-date-wrap,
+.cc-modal-field-date-wrap {
   position: relative;
 }
 
