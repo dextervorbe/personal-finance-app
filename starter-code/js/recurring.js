@@ -17,19 +17,6 @@
   var MONTH_STRIP_SLOTS = 7;
   var MONTH_STRIP_CENTER = 3;
 
-  var CATEGORY_ACCENT = {
-    Entertainment: "#C94736",
-    Bills: "#277C78",
-    Groceries: "#82C9D7",
-    "Dining Out": "#3F82B2",
-    Transportation: "#F2CDAC",
-    "Personal Care": "#67C7C9",
-    Education: "#D946B8",
-    Lifestyle: "#826CB0",
-    Shopping: "#626070",
-    General: "#6B7F59",
-  };
-
   var currency = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -520,7 +507,9 @@
   }
 
   function categoryAccent(cat) {
-    return CATEGORY_ACCENT[cat] || "#277C78";
+    return typeof financeCategoryAccent === "function"
+      ? financeCategoryAccent(cat)
+      : "#277C78";
   }
 
   function formatSummaryLine(count, sum) {

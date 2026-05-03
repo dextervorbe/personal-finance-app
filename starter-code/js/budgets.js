@@ -893,21 +893,35 @@
 
           var slot = document.createElement("div");
           slot.className = "budget-card__tx-avatar-slot";
-          var img = document.createElement("img");
-          img.className = "budget-card__tx-avatar";
-          img.alt = "";
-          img.src = tx.avatar;
-          img.loading = "lazy";
-          (function (imgEl, cell, nm) {
-            imgEl.addEventListener("error", function () {
-              imgEl.remove();
-              var fb = document.createElement("span");
-              fb.className = "budget-card__tx-fallback";
-              fb.textContent = initials(nm);
-              cell.appendChild(fb);
-            });
-          })(img, slot, tx.name);
-          slot.appendChild(img);
+          var avatarUrl = tx.avatar && String(tx.avatar).trim();
+          if (!avatarUrl) {
+            var fb0 = document.createElement("span");
+            fb0.className = "budget-card__tx-fallback";
+            if (typeof financeStyleCategoryFallback === "function") {
+              financeStyleCategoryFallback(fb0, tx.category);
+            }
+            fb0.textContent = initials(tx.name);
+            slot.appendChild(fb0);
+          } else {
+            var img = document.createElement("img");
+            img.className = "budget-card__tx-avatar";
+            img.alt = "";
+            img.src = avatarUrl;
+            img.loading = "lazy";
+            (function (imgEl, cell, nm, cat) {
+              imgEl.addEventListener("error", function () {
+                imgEl.remove();
+                var fb = document.createElement("span");
+                fb.className = "budget-card__tx-fallback";
+                if (typeof financeStyleCategoryFallback === "function") {
+                  financeStyleCategoryFallback(fb, cat);
+                }
+                fb.textContent = initials(nm);
+                cell.appendChild(fb);
+              });
+            })(img, slot, tx.name, tx.category);
+            slot.appendChild(img);
+          }
 
           var nmEl = document.createElement("p");
           nmEl.className = "budget-card__tx-name";

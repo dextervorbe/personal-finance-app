@@ -744,23 +744,37 @@
       var avatarCell = document.createElement("div");
       avatarCell.className = "tx-row__avatar-cell";
 
-      var img = document.createElement("img");
-      img.className = "tx-row__avatar";
-      img.alt = "";
-      img.src = t.avatar;
-      img.loading = "lazy";
+      var avatarUrl = t.avatar && String(t.avatar).trim();
+      if (!avatarUrl) {
+        var fb0 = document.createElement("span");
+        fb0.className = "tx-row__avatar-fallback";
+        if (typeof financeStyleCategoryFallback === "function") {
+          financeStyleCategoryFallback(fb0, t.category);
+        }
+        fb0.textContent = initials(t.name);
+        avatarCell.appendChild(fb0);
+      } else {
+        var img = document.createElement("img");
+        img.className = "tx-row__avatar";
+        img.alt = "";
+        img.src = avatarUrl;
+        img.loading = "lazy";
 
-      (function (imgEl, cell, displayName) {
-        imgEl.addEventListener("error", function () {
-          imgEl.remove();
-          var fb = document.createElement("span");
-          fb.className = "tx-row__avatar-fallback";
-          fb.textContent = initials(displayName);
-          cell.appendChild(fb);
-        });
-      })(img, avatarCell, t.name);
+        (function (imgEl, cell, displayName, category) {
+          imgEl.addEventListener("error", function () {
+            imgEl.remove();
+            var fb = document.createElement("span");
+            fb.className = "tx-row__avatar-fallback";
+            if (typeof financeStyleCategoryFallback === "function") {
+              financeStyleCategoryFallback(fb, category);
+            }
+            fb.textContent = initials(displayName);
+            cell.appendChild(fb);
+          });
+        })(img, avatarCell, t.name, t.category);
 
-      avatarCell.appendChild(img);
+        avatarCell.appendChild(img);
+      }
 
       var name = document.createElement("p");
       name.className = "tx-row__name";
