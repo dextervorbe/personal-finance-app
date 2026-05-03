@@ -59,6 +59,12 @@ These are not spelled out in the main Frontend Mentor “users should be able to
 - **Category accents** — consistent colors for default categories and user-defined ones (`category-accent.js`, `user-categories.js`).
 - **Ledger balance** — shared helper for net balance from transactions + opening balance (`ledger-balance.js`) on overview.
 
+## Future updates
+
+1. **Login / signup** — Add dedicated auth pages and gate the app behind sign-in.
+2. **Backend + database** — Wire the frontend to a real API and persist data in a database, replacing `localStorage` and static `data.json` as the source of truth.
+3. **React** — Migrate the UI to React to consolidate duplicated markup and scripts into components and shared state, shrinking and simplifying the codebase.
+
 ## Links
 
 - [Live demo (GitHub Pages)](https://dextervorbe.github.io/personal-finance-app/)
