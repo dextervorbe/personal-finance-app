@@ -2,20 +2,6 @@
   var PAGE_SIZE = 10;
   var NAME_MAX = 30;
 
-  var CATEGORY_VALUES = [
-    "",
-    "Entertainment",
-    "Bills",
-    "Groceries",
-    "Dining Out",
-    "Transportation",
-    "Personal Care",
-    "Education",
-    "Lifestyle",
-    "Shopping",
-    "General",
-  ];
-
   var currency = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -302,8 +288,15 @@
   function normalizeQueryCategory(raw) {
     if (!raw) return null;
     var decoded = decodeURIComponent(raw.trim());
-    for (var i = 1; i < CATEGORY_VALUES.length; i++) {
-      if (CATEGORY_VALUES[i] === decoded) return CATEGORY_VALUES[i];
+    var list =
+      typeof financeGetMergedCategoryList === "function"
+        ? financeGetMergedCategoryList()
+        : [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i] === decoded) return list[i];
+    }
+    for (var j = 0; j < list.length; j++) {
+      if (list[j].toLowerCase() === decoded.toLowerCase()) return list[j];
     }
     return null;
   }
@@ -574,9 +567,26 @@
     var deleteTitleEl = document.getElementById("tx-delete-title");
     var deleteLedeEl = document.getElementById("tx-delete-lede");
 
+    function refreshTxCategoryDropdowns(preserveFilter) {
+      if (typeof financeFillCategorySelect !== "function") return;
+      var filterVal = preserveFilter && catEl ? catEl.value : "";
+      financeFillCategorySelect(catEl, {
+        includeEmpty: true,
+        emptyLabel: "All Transactions",
+        selectedValue: filterVal,
+      });
+      var addCat = document.getElementById("tx-add-category");
+      var addPrev = addCat ? addCat.value : "";
+      financeFillCategorySelect(addCat, { selectedValue: addPrev });
+      var editCat = document.getElementById("tx-edit-category");
+      var editPrev = editCat ? editCat.value : "";
+      financeFillCategorySelect(editCat, { selectedValue: editPrev });
+    }
+
+    refreshTxCategoryDropdowns(true);
     var params = new URLSearchParams(window.location.search);
     var fromUrl = normalizeQueryCategory(params.get("category"));
-    if (fromUrl) catEl.value = fromUrl;
+    if (fromUrl && catEl) catEl.value = fromUrl;
 
     function rebuildAllFromCache() {
       allTransactions = rebuildTransactionsFromStorage(jsonTransactionsCache);
@@ -618,7 +628,13 @@
       clearEditErrors();
       if (editId) editId.value = tx.__txId || "";
       if (editName) editName.value = tx.name || "";
-      if (editCategory) editCategory.value = tx.category || "General";
+      if (typeof financeFillCategorySelect === "function") {
+        financeFillCategorySelect(editCategory, {
+          selectedValue: tx.category || "General",
+        });
+      } else if (editCategory) {
+        editCategory.value = tx.category || "General";
+      }
       if (editDate) editDate.value = isoToDateInputValue(tx.date);
       if (editAmount) editAmount.value = String(tx.amount);
       if (editRecurring) editRecurring.checked = !!tx.recurring;

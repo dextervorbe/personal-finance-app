@@ -203,6 +203,24 @@ body {
   transition: filter 0.15s ease;
 }
 
+.sidebar__icon-svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--color-sidebar-muted);
+  transition: color 0.15s ease;
+}
+
+.sidebar__link:hover .sidebar__icon-svg,
+.sidebar__link:focus-visible .sidebar__icon-svg {
+  color: var(--color-link-hover-text);
+}
+
+.sidebar__link[aria-current="page"] .sidebar__icon-svg {
+  color: var(--color-accent-green);
+}
+
 .sidebar__label {
   white-space: nowrap;
 }

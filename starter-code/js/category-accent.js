@@ -22,8 +22,12 @@
 
   /** Strong fill + white text for initials chips when avatar image is missing. */
   function financeStyleCategoryFallback(el, category) {
-    if (!el || typeof financeCategoryAccent !== "function") return;
-    el.style.backgroundColor = financeCategoryAccent(category);
+    if (!el) return;
+    var accent =
+      typeof global.financeCategoryAccent === "function"
+        ? global.financeCategoryAccent
+        : financeCategoryAccent;
+    el.style.backgroundColor = accent(category);
     el.style.color = "#fff";
   }
 

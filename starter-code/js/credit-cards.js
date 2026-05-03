@@ -2,20 +2,6 @@
   var PAGE_SIZE = 10;
   var NAME_MAX = 30;
 
-  var CATEGORY_VALUES = [
-    "",
-    "Entertainment",
-    "Bills",
-    "Groceries",
-    "Dining Out",
-    "Transportation",
-    "Personal Care",
-    "Education",
-    "Lifestyle",
-    "Shopping",
-    "General",
-  ];
-
   var currency = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -463,8 +449,15 @@
   function normalizeQueryCategory(raw) {
     if (!raw) return null;
     var decoded = decodeURIComponent(raw.trim());
-    for (var i = 1; i < CATEGORY_VALUES.length; i++) {
-      if (CATEGORY_VALUES[i] === decoded) return CATEGORY_VALUES[i];
+    var list =
+      typeof financeGetMergedCategoryList === "function"
+        ? financeGetMergedCategoryList()
+        : [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i] === decoded) return list[i];
+    }
+    for (var j = 0; j < list.length; j++) {
+      if (list[j].toLowerCase() === decoded.toLowerCase()) return list[j];
     }
     return null;
   }
@@ -770,9 +763,26 @@
     var deleteTitleEl = document.getElementById("cc-delete-title");
     var deleteLedeEl = document.getElementById("cc-delete-lede");
 
+    function refreshCcCategoryDropdowns(preserveFilter) {
+      if (typeof financeFillCategorySelect !== "function") return;
+      var filterVal = preserveFilter && catEl ? catEl.value : "";
+      var addEl = document.getElementById("cc-add-category");
+      var editEl = document.getElementById("cc-edit-category");
+      var addVal = addEl ? addEl.value : "";
+      var editVal = editEl ? editEl.value : "";
+      financeFillCategorySelect(catEl, {
+        includeEmpty: true,
+        emptyLabel: "All categories",
+        selectedValue: filterVal,
+      });
+      financeFillCategorySelect(addEl, { selectedValue: addVal });
+      financeFillCategorySelect(editEl, { selectedValue: editVal });
+    }
+
+    refreshCcCategoryDropdowns(true);
     var params = new URLSearchParams(window.location.search);
     var fromUrl = normalizeQueryCategory(params.get("category"));
-    if (fromUrl) catEl.value = fromUrl;
+    if (fromUrl && catEl) catEl.value = fromUrl;
 
     function rebuildAllFromCache() {
       var seedCardId =
@@ -1139,7 +1149,13 @@
       clearEditErrors();
       if (editId) editId.value = tx.__txId || "";
       if (editName) editName.value = tx.name || "";
-      if (editCategory) editCategory.value = tx.category || "General";
+      if (typeof financeFillCategorySelect === "function") {
+        financeFillCategorySelect(editCategory, {
+          selectedValue: tx.category || "General",
+        });
+      } else if (editCategory) {
+        editCategory.value = tx.category || "General";
+      }
       if (editDate) editDate.value = isoToDateInputValue(tx.date);
       if (editAmount) editAmount.value = String(tx.amount);
       if (editRecurring) editRecurring.checked = !!tx.recurring;

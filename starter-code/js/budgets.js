@@ -14,19 +14,6 @@
     "Dec",
   ];
 
-  var CATEGORY_OPTIONS = [
-    "Entertainment",
-    "Bills",
-    "Groceries",
-    "Dining Out",
-    "Transportation",
-    "Personal Care",
-    "Education",
-    "Lifestyle",
-    "Shopping",
-    "General",
-  ];
-
   var THEME_PRESETS = [
     { label: "Green", hex: "#277C78" },
     { label: "Yellow", hex: "#F2CDAC" },
@@ -512,13 +499,32 @@
       return false;
     }
 
+    function categoryChoices() {
+      if (typeof financeGetMergedCategoryList === "function") {
+        return financeGetMergedCategoryList();
+      }
+      return [
+        "Entertainment",
+        "Bills",
+        "Groceries",
+        "Dining Out",
+        "Transportation",
+        "Personal Care",
+        "Education",
+        "Lifestyle",
+        "Shopping",
+        "General",
+      ];
+    }
+
     function fillEditCategorySelect(editIndex) {
       if (!editCategory || editIndex < 0 || editIndex >= budgetsState.length)
         return;
       var current = budgetsState[editIndex].category;
       editCategory.innerHTML = "";
-      for (var j = 0; j < CATEGORY_OPTIONS.length; j++) {
-        var cat = CATEGORY_OPTIONS[j];
+      var opts = categoryChoices();
+      for (var j = 0; j < opts.length; j++) {
+        var cat = opts[j];
         if (isCategoryUsedByOtherBudget(cat, editIndex) && cat !== current) {
           continue;
         }
@@ -526,6 +532,19 @@
         opt.value = cat;
         opt.textContent = cat;
         editCategory.appendChild(opt);
+      }
+      var foundCur = false;
+      for (var c = 0; c < editCategory.options.length; c++) {
+        if (editCategory.options[c].value === current) {
+          foundCur = true;
+          break;
+        }
+      }
+      if (!foundCur && current) {
+        var optOr = document.createElement("option");
+        optOr.value = current;
+        optOr.textContent = current;
+        editCategory.appendChild(optOr);
       }
       for (var s = 0; s < editCategory.options.length; s++) {
         if (editCategory.options[s].value === current) {
@@ -582,8 +601,9 @@
         used[budgetsState[i].category] = true;
       }
       catSelect.innerHTML = "";
-      for (var j = 0; j < CATEGORY_OPTIONS.length; j++) {
-        var cat = CATEGORY_OPTIONS[j];
+      var choices = categoryChoices();
+      for (var j = 0; j < choices.length; j++) {
+        var cat = choices[j];
         if (used[cat]) continue;
         var opt = document.createElement("option");
         opt.value = cat;
