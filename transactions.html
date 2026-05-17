@@ -354,7 +354,7 @@
 
         <div class="tx-modal__field">
           <label class="tx-modal__label" for="tx-add-amount">Amount</label>
-          <input type="number" id="tx-add-amount" class="tx-modal__input" inputmode="decimal" step="any" placeholder="0.00" aria-describedby="tx-add-amount-err">
+          <input type="text" id="tx-add-amount" class="tx-modal__input" inputmode="decimal" autocomplete="off" placeholder="50.00 (+ for income)" aria-describedby="tx-add-amount-err">
           <span id="tx-add-amount-err" class="tx-modal__error" role="alert" hidden></span>
         </div>
 
@@ -413,7 +413,7 @@
 
         <div class="tx-modal__field">
           <label class="tx-modal__label" for="tx-edit-amount">Amount</label>
-          <input type="number" id="tx-edit-amount" class="tx-modal__input" inputmode="decimal" step="any" placeholder="0.00" aria-describedby="tx-edit-amount-err">
+          <input type="text" id="tx-edit-amount" class="tx-modal__input" inputmode="decimal" autocomplete="off" placeholder="50.00 (+ for income)" aria-describedby="tx-edit-amount-err">
           <span id="tx-edit-amount-err" class="tx-modal__error" role="alert" hidden></span>
         </div>
 
@@ -460,6 +460,7 @@
   <script src="./js/budget-year-picker.js" defer></script>
   <script src="./js/category-accent.js" defer></script>
   <script src="./js/user-categories.js" defer></script>
+  <script src="./js/transaction-amount.js" defer></script>
   <script src="./js/transactions.js" defer></script>
 </body>
 </html>

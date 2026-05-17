@@ -371,7 +371,7 @@
 
         <div class="tx-modal__field">
           <label class="tx-modal__label" for="cc-add-amount">Amount</label>
-          <input type="number" id="cc-add-amount" class="tx-modal__input" inputmode="decimal" step="any" placeholder="0.00" aria-describedby="cc-add-amount-err">
+          <input type="text" id="cc-add-amount" class="tx-modal__input" inputmode="decimal" autocomplete="off" placeholder="50.00 (+ for income)" aria-describedby="cc-add-amount-err">
           <span id="cc-add-amount-err" class="tx-modal__error" role="alert" hidden></span>
         </div>
 
@@ -430,7 +430,7 @@
 
         <div class="tx-modal__field">
           <label class="tx-modal__label" for="cc-edit-amount">Amount</label>
-          <input type="number" id="cc-edit-amount" class="tx-modal__input" inputmode="decimal" step="any" placeholder="0.00" aria-describedby="cc-edit-amount-err">
+          <input type="text" id="cc-edit-amount" class="tx-modal__input" inputmode="decimal" autocomplete="off" placeholder="50.00 (+ for income)" aria-describedby="cc-edit-amount-err">
           <span id="cc-edit-amount-err" class="tx-modal__error" role="alert" hidden></span>
         </div>
 
@@ -551,6 +551,7 @@
   <script src="./js/budget-year-picker.js" defer></script>
   <script src="./js/category-accent.js" defer></script>
   <script src="./js/user-categories.js" defer></script>
+  <script src="./js/transaction-amount.js" defer></script>
   <script src="./js/credit-cards.js" defer></script>
 </body>
 </html>

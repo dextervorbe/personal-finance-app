@@ -1157,7 +1157,12 @@
         editCategory.value = tx.category || "General";
       }
       if (editDate) editDate.value = isoToDateInputValue(tx.date);
-      if (editAmount) editAmount.value = String(tx.amount);
+      if (editAmount) {
+        editAmount.value =
+          typeof formatTransactionAmountInput === "function"
+            ? formatTransactionAmountInput(tx.amount)
+            : String(tx.amount);
+      }
       if (editRecurring) editRecurring.checked = !!tx.recurring;
       editDialog.showModal();
       requestAnimationFrame(function () {
@@ -1650,9 +1655,17 @@
         }
 
         var amtRaw = addAmount.value.trim();
-        var amtNum = amtRaw === "" ? NaN : Number(amtRaw);
-        if (amtRaw === "" || !Number.isFinite(amtNum)) {
-          showErr(addAmountErr, "Enter a valid amount.");
+        var amtNum =
+          typeof parseTransactionAmountInput === "function"
+            ? parseTransactionAmountInput(amtRaw)
+            : amtRaw === ""
+              ? NaN
+              : Number(amtRaw);
+        if (!Number.isFinite(amtNum)) {
+          showErr(
+            addAmountErr,
+            "Enter a valid amount. Use + for money in (e.g. +50.00)."
+          );
           addAmount.setAttribute("aria-invalid", "true");
           ok = false;
         }
@@ -1748,10 +1761,16 @@
         }
 
         var amtRaw = editAmount ? editAmount.value.trim() : "";
-        var amtNum = amtRaw === "" ? NaN : Number(amtRaw);
-        if (amtRaw === "" || !Number.isFinite(amtNum)) {
+        var amtNum =
+          typeof parseTransactionAmountInput === "function"
+            ? parseTransactionAmountInput(amtRaw)
+            : amtRaw === ""
+              ? NaN
+              : Number(amtRaw);
+        if (!Number.isFinite(amtNum)) {
           if (editAmountErr) {
-            editAmountErr.textContent = "Enter a valid amount.";
+            editAmountErr.textContent =
+              "Enter a valid amount. Use + for money in (e.g. +50.00).";
             editAmountErr.hidden = false;
           }
           if (editAmount) editAmount.setAttribute("aria-invalid", "true");
